@@ -1,0 +1,98 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #111111;
+  --surface-subtle: #F5F5F2;
+  --surface-card: #FFFFFF;
+  --surface-border: #E5E5E5;
+  --accent-red: #E52323;
+  --accent-red-hover: #C91A1A;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #888888;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Custom Clean Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F5F5F2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4D4CE;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #E52323;
+}
+
+/* Selection */
+::selection {
+  background: #E52323;
+  color: #FFFFFF;
+}
+
+/* Editorial Mineral Card */
+.mineral-card-light {
+  background-color: #FFFFFF;
+  border: 1px solid #E8E8E4;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mineral-card-light:hover {
+  border-color: #D0D0CA;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+/* Typography styles */
+.font-display {
+  font-family: var(--font-outfit), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.font-mono-code {
+  font-family: var(--font-space-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
