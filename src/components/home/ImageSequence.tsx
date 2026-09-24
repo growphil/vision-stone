@@ -201,6 +201,14 @@ export default function ImageSequence({
     imagesRef.current = new Array(totalFrames).fill(null);
     let isCancelled = false;
 
+    // Safety timeout: ensure hero is ready within 1.5s regardless of network speed
+    const safetyTimer = setTimeout(() => {
+      if (!isCancelled) {
+        setInitialReady(true);
+        resizeCanvas();
+      }
+    }, 1500);
+
     // Load Frame 1 immediately
     const firstImg = new Image();
     firstImg.src = getFrameUrl(1);
@@ -215,16 +223,18 @@ export default function ImageSequence({
     };
 
     firstImg.onerror = () => {
-      const fallbackUrl = `/Dolomite%20Powder/0001.jpg`;
-      const fallbackImg = new Image();
-      fallbackImg.src = fallbackUrl;
-      fallbackImg.onload = () => {
+      // Fallback to product image if sequence frame fails to load
+      const productFallback = new Image();
+      productFallback.src = `/Products/Dolomite Powder.webp`;
+      productFallback.onload = () => {
         if (isCancelled) return;
-        imagesRef.current[0] = fallbackImg;
+        imagesRef.current[0] = productFallback;
         setInitialReady(true);
         resizeCanvas();
         renderFrame(0);
-        startProgressiveLoading();
+      };
+      productFallback.onerror = () => {
+        if (!isCancelled) setInitialReady(true);
       };
     };
 
@@ -274,6 +284,7 @@ export default function ImageSequence({
 
     return () => {
       isCancelled = true;
+      clearTimeout(safetyTimer);
       window.removeEventListener("resize", resizeCanvas);
       window.removeEventListener("orientationchange", resizeCanvas);
     };

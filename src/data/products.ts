@@ -451,6 +451,9 @@ export const PRODUCT_CATEGORIES = [
 ];
 
 export function getProductBySlug(slug: string): Product | undefined {
+  if (slug === "kola-podi-powder" || slug === "kolam-powder" || slug === "kola-podi") {
+    return PRODUCTS.find((p) => p.slug === "kola-maavu") || PRODUCTS.find((p) => p.slug === slug);
+  }
   return PRODUCTS.find((p) => p.slug === slug);
 }
 
@@ -466,3 +469,4 @@ export function getRelatedProducts(currentSlug: string, count: number = 3): Prod
     .sort((a, b) => (a.category === current.category ? -1 : 1))
     .slice(0, count);
 }
+

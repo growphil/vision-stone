@@ -28,9 +28,11 @@ interface ProductPageProps {
 }
 
 export async function generateStaticParams() {
-  return PRODUCTS.map((product) => ({
+  const params = PRODUCTS.map((product) => ({
     slug: product.slug,
   }));
+  params.push({ slug: "kola-podi-powder" });
+  return params;
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
