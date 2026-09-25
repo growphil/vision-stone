@@ -53,6 +53,8 @@ export interface ProductItem {
   isFeatured?: boolean;
 }
 
+export type Product = ProductItem;
+
 // ============================================================
 // COMPANY-SUPPLIED CATALOGUE (21 products)
 // ============================================================
