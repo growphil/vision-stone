@@ -7,6 +7,7 @@ export interface ApplicationProduct {
 
 export interface ApplicationItem {
   id: string; // "01", "02", ...
+  categoryNumber?: string;
   slug: string;
   name: string;
   headline: string;
@@ -34,6 +35,7 @@ export interface ApplicationItem {
 export const APPLICATIONS: ApplicationItem[] = [
   {
     id: "01",
+    categoryNumber: "01",
     slug: "agriculture-soil-applications",
     name: "Agriculture & Soil Applications",
     headline: "MINERALS FOR AGRICULTURAL USE",
@@ -58,6 +60,7 @@ export const APPLICATIONS: ApplicationItem[] = [
   },
   {
     id: "02",
+    categoryNumber: "02",
     slug: "fertilizer-agri-inputs",
     name: "Fertilizer & Agri-Inputs",
     headline: "MINERAL RAW MATERIALS FOR FERTILIZERS",
@@ -82,6 +85,7 @@ export const APPLICATIONS: ApplicationItem[] = [
   },
   {
     id: "03",
+    categoryNumber: "03",
     slug: "rubber-polymer-manufacturing",
     name: "Rubber & Polymer Manufacturing",
     headline: "MINERAL FILLERS FOR POLYMER & RUBBER",
@@ -106,6 +110,7 @@ export const APPLICATIONS: ApplicationItem[] = [
   },
   {
     id: "04",
+    categoryNumber: "04",
     slug: "paint-manufacturing",
     name: "Paint Manufacturing",
     headline: "HIGH-BRIGHTNESS MINERAL EXTENDERS",
@@ -130,6 +135,7 @@ export const APPLICATIONS: ApplicationItem[] = [
   },
   {
     id: "05",
+    categoryNumber: "05",
     slug: "tiles-ceramics",
     name: "Tiles & Ceramics",
     headline: "RAW MATERIALS FOR CERAMICS & TILES",
@@ -148,6 +154,7 @@ export const APPLICATIONS: ApplicationItem[] = [
   },
   {
     id: "06",
+    categoryNumber: "06",
     slug: "construction",
     name: "Construction",
     headline: "MINERALS FOR INFRASTRUCTURE & CONSTRUCTION",
@@ -178,6 +185,7 @@ export const APPLICATIONS: ApplicationItem[] = [
   },
   {
     id: "07",
+    categoryNumber: "07",
     slug: "pipeline-applications",
     name: "Pipeline Applications",
     headline: "SPECIALIZED COATING & BEDDING MINERALS",
@@ -208,6 +216,7 @@ export const APPLICATIONS: ApplicationItem[] = [
   },
   {
     id: "08",
+    categoryNumber: "08",
     slug: "general-manufacturing",
     name: "General Manufacturing",
     headline: "MULTI-SECTOR MINERAL & RAW MATERIAL SUPPLY",
