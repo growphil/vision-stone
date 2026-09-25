@@ -1,107 +1,100 @@
 import React from "react";
 import Link from "next/link";
-import { ShieldCheck, Activity, Gauge, Microscope, ArrowRight, Award } from "lucide-react";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 
 export default function QualitySection() {
-  const QA_PILLARS = [
+  const qualityPillars = [
     {
-      icon: <Microscope className="w-5 h-5 text-[#E52323]" />,
-      title: "Laser Particle Granulometry",
-      desc: "Every micronized batch is analyzed on Malvern Mastersizer diffraction instruments to verify tight span, D50 diameter, and elimination of oversized gritty top-cuts.",
-      metric: "D50 Accuracy ±0.2µm",
+      title: "Product Form",
+      description: "Clarifying physical state whether natural sized rock lumps, coarse crushed aggregates, or fine micronized powders.",
     },
     {
-      icon: <Activity className="w-5 h-5 text-[#E52323]" />,
-      title: "X-Ray Fluorescence (XRF)",
-      desc: "Spectrometric elemental assays verify stoichiometric purity of CaCO₃, MgCO₃, and CaO while monitoring silica (SiO₂) to ensure less than 1.0% insolubles.",
-      metric: "Purity up to 98.8%",
+      title: "Particle Size",
+      description: "Confirming exact mesh distribution (e.g. 100, 200, 240 mesh or custom 0–240 mesh) to match target industrial formulations.",
     },
     {
-      icon: <Gauge className="w-5 h-5 text-[#E52323]" />,
-      title: "Spectrophotometer Brightness",
-      desc: "Precision CIE L*a*b* optical whiteness and Y brightness measurements guarantee batch-to-batch consistency for architectural paints, plastics, and paper.",
-      metric: "Brightness > 96.0%",
+      title: "Packaging Format",
+      description: "Selecting moisture-sealed small bags, bulk jumbo bags with liners, or loose vehicle shipments to protect material in transit.",
     },
     {
-      icon: <ShieldCheck className="w-5 h-5 text-[#E52323]" />,
-      title: "Batch COA Certification",
-      desc: "Every outbound dispatch is accompanied by a standardized Certificate of Analysis (COA) detailing physical, chemical, and sieve parameters.",
-      metric: "100% Traceability",
+      title: "Intended Application",
+      description: "Understanding furnace, kiln, paint, polymer, or agricultural parameters to ensure compatibility with client processes.",
+    },
+    {
+      title: "Representative Samples",
+      description: "Supplying test sample batches for customer laboratory trial and physical verification prior to full-scale dispatch.",
+    },
+    {
+      title: "Requirement Confirmation",
+      description: "Reviewing specifications and delivery timelines in advance so commercial commitments are fulfilled without compromise.",
     },
   ];
 
   return (
-    <section className="py-28 bg-[#FFFFFF] border-t border-[#E5E5E5] relative" id="quality">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="w-full bg-[#FFFFFF] text-[#111111] py-24 sm:py-32 font-display border-t border-[#E8E8E4]">
+      <div className="max-w-[1440px] mx-auto px-6 sm:px-12 lg:px-16">
         
-        {/* Section Header */}
-        <div className="max-w-3xl space-y-4 mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5F5F2] border border-[#E5E5E5] text-xs font-mono-code text-[#E52323] font-bold">
+        <div className="space-y-4 max-w-3xl mb-16">
+          <div className="flex items-center gap-2.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
-            <span>PRECISION &bull; QUALITY ASSURANCE</span>
+            <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-[#E52323]">
+              QUALITY ASSURANCE
+            </span>
           </div>
-          <h2 className="font-display font-black text-3xl sm:text-5xl text-[#111111] tracking-tight uppercase">
-            LABORATORY TESTED. BATCH VERIFIED.
+
+          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-[#111111] leading-tight">
+            QUALITY
+            <br />
+            <span className="text-[#E52323]">STARTS WITH CLARITY.</span>
           </h2>
-          <p className="text-[#555555] text-sm sm:text-base leading-relaxed">
-            Industrial processes tolerate zero chemical drift. Our quality control testing protocols ensure every truckload and container matches your exact technical specifications.
+
+          <p className="text-base sm:text-lg text-[#555555] leading-relaxed pt-2">
+            Vision Stones focuses on supplying products according to agreed product specifications and customer requirements. We achieve consistency through detailed requirement confirmation rather than unverified claims.
           </p>
         </div>
 
-        {/* 4 Pillars Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {QA_PILLARS.map((pillar, idx) => (
+        {/* 6 QUALITY PILLARS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {qualityPillars.map((item, idx) => (
             <div
-              key={idx}
-              className="mineral-card-light rounded-sm p-7 flex flex-col justify-between space-y-6 group hover:border-[#D0D0CA] transition-all bg-white"
+              key={item.title}
+              className="bg-[#FAF9F6] p-8 rounded-[10px] border border-[#E8E8E4] flex flex-col justify-between shadow-subtle hover:border-[#D0D0CA] transition-colors"
             >
-              <div className="space-y-4">
-                <div className="w-10 h-10 rounded-sm bg-[#F5F5F2] border border-[#EAEAE5] flex items-center justify-center">
-                  {pillar.icon}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-[#E52323] tracking-widest uppercase">
+                    CRITERION 0{idx + 1}
+                  </span>
+                  <CheckCircle2 className="w-4 h-4 text-[#E52323]" />
                 </div>
 
-                <h3 className="font-display font-bold text-lg text-[#111111] group-hover:text-black transition-colors">
-                  {pillar.title}
+                <h3 className="text-xl font-black uppercase text-[#111111] tracking-tight">
+                  {item.title}
                 </h3>
 
-                <p className="text-xs text-[#555555] leading-relaxed font-normal">
-                  {pillar.desc}
+                <p className="text-xs sm:text-sm text-[#555555] leading-relaxed">
+                  {item.description}
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-[#F0F0EC] flex items-center justify-between">
-                <span className="text-[10px] font-mono-code text-[#888888] uppercase font-semibold">
-                  Target Spec
-                </span>
-                <span className="text-xs font-mono-code text-[#111111] font-bold">
-                  {pillar.metric}
-                </span>
+              <div className="pt-6 mt-6 border-t border-[#E8E8E4] text-[11px] font-mono text-[#888888] flex items-center justify-between">
+                <span>SPECIFICATION CONTROL</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
               </div>
             </div>
           ))}
         </div>
 
-        {/* Quality Callout Banner */}
-        <div className="mt-14 bg-[#F5F5F2] border border-[#E5E5E5] rounded-sm p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-sm bg-white border border-[#E5E5E5] flex items-center justify-center shrink-0">
-              <Award className="w-6 h-6 text-[#E52323]" />
-            </div>
-            <div>
-              <h4 className="font-display font-bold text-base text-[#111111]">
-                Request Custom Technical Specsheet & Laboratory Sample
-              </h4>
-              <p className="text-xs text-[#555555]">
-                Receive certified COA and material testing samples for your factory trials.
-              </p>
-            </div>
-          </div>
-
+        {/* SAMPLE REQUEST CTA */}
+        <div className="mt-14 p-8 rounded-[8px] bg-[#FAF9F6] border border-[#E8E8E4] flex flex-col sm:flex-row items-center justify-between gap-6">
+          <p className="text-xs sm:text-sm text-[#555555]">
+            Need to evaluate a product before placing a bulk order? We provide representative samples across all mineral grades.
+          </p>
           <Link
-            href="/contact"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#111111] hover:bg-[#E52323] text-white font-bold text-xs font-mono-code uppercase tracking-widest rounded-sm transition-all shrink-0 shadow-sm"
+            href="/contact?intent=sample"
+            className="inline-flex items-center gap-2 bg-[#E52323] text-white hover:bg-[#C91A1A] text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-[4px] transition-all whitespace-nowrap"
           >
-            <span>Request Sample & COA</span>
+            <span>REQUEST TRIAL SAMPLES</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>

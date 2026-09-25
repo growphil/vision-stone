@@ -57,6 +57,18 @@ body {
   background: #E52323;
 }
 
+/* Focus-visible Accessibility */
+:focus-visible {
+  outline: 2px solid #E52323;
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #E52323;
+  outline-offset: 2px;
+}
+
 /* Selection */
 ::selection {
   background: #E52323;
@@ -83,6 +95,31 @@ body {
 
 .font-mono-code {
   font-family: var(--font-space-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Utility to hide scrollbars while allowing touch/wheel scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Stage transition animation for cinematic hero */
+@keyframes stageFade {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-stage-fade {
+  animation: stageFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Reduced motion support */

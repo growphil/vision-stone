@@ -1,6 +1,5 @@
 import { MetadataRoute } from "next";
-import { PRODUCTS } from "@/data/products";
-import { APPLICATIONS } from "@/data/applications";
+import { ALL_PRODUCTS } from "@/data/products";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://visionstone.in";
@@ -19,12 +18,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/brands`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
       url: `${baseUrl}/about`,
       lastModified: new Date(),
       changeFrequency: "monthly",
@@ -37,7 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/infrastructure`,
+      url: `${baseUrl}/manufacturing`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
@@ -62,7 +55,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const productRoutes: MetadataRoute.Sitemap = PRODUCTS.map((product) => ({
+  const productRoutes: MetadataRoute.Sitemap = ALL_PRODUCTS.map((product) => ({
     url: `${baseUrl}/products/${product.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly",

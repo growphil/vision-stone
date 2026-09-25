@@ -4,58 +4,71 @@ import Link from "next/link";
 import { COMPANY_INFO } from "@/data/company";
 
 export const metadata: Metadata = {
-  title: "Terms of Mineral Supply | VISION STONE",
-  description: "Standard terms and conditions for industrial mineral contracts, dispatch, and sampling.",
+  title: "Terms of Supply | VISION STONES",
+  description: "Standard terms and conditions for industrial mineral contracts, dispatch, and sampling with Vision Stones.",
 };
 
 export default function TermsPage() {
   return (
-    <div className="pt-28 pb-24 bg-[#070709] text-white min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    <div className="pt-24 sm:pt-32 pb-16 sm:pb-24 bg-[#FFFFFF] text-[#111111] min-h-screen font-display">
+      <div className="max-w-4xl mx-auto px-4 sm:px-8 space-y-8 sm:space-y-10">
         
-        <div className="space-y-3">
-          <span className="text-xs font-mono-code text-[#D62828] uppercase tracking-widest">
-            COMMERCIAL TERMS
+        <div className="space-y-2 sm:space-y-3">
+          <span className="text-xs font-mono font-bold text-[#E52323] uppercase tracking-widest">
+            COMMERCIAL POLICIES
           </span>
-          <h1 className="font-display font-bold text-3xl sm:text-5xl text-white">
+          <h1 className="text-2xl sm:text-5xl font-black uppercase text-[#111111]">
             Terms of Supply & Quotation
           </h1>
-          <p className="text-xs font-mono-code text-neutral-400">
-            Effective: September 2026 &bull; {COMPANY_INFO.legalName}
+          <p className="text-xs font-mono text-[#777777]">
+            {COMPANY_INFO.name} &bull; {COMPANY_INFO.location.full}
           </p>
         </div>
 
-        <div className="mineral-card rounded-sm p-8 sm:p-10 space-y-8 text-xs sm:text-sm text-neutral-300 leading-relaxed font-light border border-white/10">
+        <div className="bg-[#FAF9F6] p-6 sm:p-10 rounded-[10px] border border-[#E8E8E4] space-y-6 sm:space-y-8 text-xs sm:text-sm text-[#555555] leading-relaxed shadow-subtle">
           <section className="space-y-2">
-            <h2 className="font-display font-bold text-lg text-white">1. Contract Supply & Purchase Orders</h2>
+            <h2 className="text-base font-black uppercase text-[#111111]">1. Quotation & Supply Arrangements</h2>
             <p>
-              All mineral supply contracts, proforma invoices, and dispatch schedules issued by Vision Stone are subject to agreed technical specifications, moisture limits, and delivery terms (Ex-Works Salem, FOR Destination, or FOB Indian Ports).
+              All mineral supply arrangements, proforma quotations, and dispatch schedules issued by Vision Stones are confirmed based on agreed product specifications, packaging types, production capability, and freight logistics from Tirunelveli, Tamil Nadu.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-display font-bold text-lg text-white">2. Quality Assurance & Sampling</h2>
+            <h2 className="text-base font-black uppercase text-[#111111]">2. Product Specifications & Sampling</h2>
             <p>
-              Material purity, mesh distributions, and loss-on-ignition parameters are tested on representative lot samples per standard ASTM/IS analytical procedures. A Certificate of Analysis (COA) is issued for each batch.
+              Particle size, mesh grading, and physical forms are prepared according to agreed customer requirements. Test samples can be requested for trial verification prior to commercial bulk dispatch.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-display font-bold text-lg text-white">3. Packaging & Transport</h2>
+            <h2 className="text-base font-black uppercase text-[#111111]">3. Packaging & Logistics</h2>
             <p>
-              Unless otherwise specified, products are packed in standard 25kg / 50kg laminated HDPE bags or 1 MT / 1.25 MT heavy-duty jumbo bags. Transport logistics via tippers, covered trailers, or container rakes must adhere to gross weight highway regulations.
+              Packaging is arranged per client order, including standard 25kg/50kg bags, bulk jumbo bags, or loose tipper deliveries. Transit schedules and road transport coordination are managed in direct communication with the buyer.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="font-display font-bold text-lg text-white">4. Commercial Enquiries</h2>
+            <h2 className="text-base font-black uppercase text-[#111111]">4. Inquiries & Supply Coordination</h2>
             <p>
-              For long-term supply agreements and formal tenders, please contact our commercial desk at{" "}
-              <a href={`mailto:${COMPANY_INFO.contact.salesEmail}`} className="text-[#D62828] hover:underline font-mono-code">
-                {COMPANY_INFO.contact.salesEmail}
+              For recurring supply agreements or customized mesh requirements, contact our commercial coordination desk at{" "}
+              <a href={`mailto:${COMPANY_INFO.contact.email}`} className="text-[#E52323] hover:underline font-mono">
+                {COMPANY_INFO.contact.email}
+              </a>{" "}
+              or call{" "}
+              <a href={`tel:${COMPANY_INFO.contact.phone}`} className="text-[#E52323] hover:underline font-mono">
+                {COMPANY_INFO.contact.phone}
               </a>.
             </p>
           </section>
+        </div>
+
+        <div className="pt-4">
+          <Link
+            href="/"
+            className="text-xs font-bold uppercase tracking-wider text-[#111111] hover:text-[#E52323] transition-colors"
+          >
+            ← Return to Homepage
+          </Link>
         </div>
 
       </div>

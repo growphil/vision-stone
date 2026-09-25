@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SmoothScrollProvider from "@/components/layout/SmoothScrollProvider";
+import { COMPANY_INFO } from "@/data/company";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,49 +28,60 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://visionstone.in"),
   title: {
-    default: "VISION STONE | Premium Mineral & Industrial Products",
-    template: "%s | VISION STONE",
+    default: "VISION STONES | Mineral Manufacturing & Raw-Material Supply",
+    template: "%s | VISION STONES",
   },
   description:
-    "Vision Stone manufactures high-purity Dolomite Powder, Dolomite Lump, Calcite Powder, Calcite Stone, Limestone, Hydrated Lime, Calcium Carbonate, and Kola Maavu for heavy metallurgy, construction, polymers, and manufacturing.",
+    "Vision Stones: Mineral Manufacturing & Raw-Material Supply. Manufacturing roots dating back to 1997. Supplying high-purity Dolomite, Limestone, Lime, Calcite, and Calcium Carbonate to 450+ clients across India from Tirunelveli, Tamil Nadu.",
   keywords: [
-    "Vision Stone",
+    "Vision Stones",
     "Dolomite Powder",
-    "Dolomite Lump",
-    "Calcite Powder",
-    "Calcite Stone",
-    "Limestone Lump",
+    "Limestone Powder",
+    "Limestone Lumps",
     "Hydrated Lime Powder",
+    "Quick Lime",
     "Calcium Carbonate Powder",
-    "Kola Maavu",
+    "Charcoal Powder",
+    "Coconutshell Charcoal",
+    "Gypsum Powder",
+    "Marine Gypsum",
+    "Magnesite Powder",
     "Industrial Minerals India",
-    "Mineral Processing Salem",
-    "Metallurgical Dolomite",
-    "Micronized Mineral Powders"
+    "Mineral Manufacturing Tirunelveli",
+    "Tamil Nadu Industrial Minerals",
+    "Lime Limestone Supplier",
+    "Dolomite Supplier India",
   ],
-  authors: [{ name: "Vision Stone Minerals" }],
-  creator: "Vision Stone",
+  authors: [{ name: "Vision Stones" }],
+  creator: "Vision Stones",
   openGraph: {
     type: "website",
     locale: "en_IN",
     url: "https://visionstone.in",
-    siteName: "VISION STONE Minerals",
-    title: "VISION STONE | Premium Mineral & Industrial Products",
+    siteName: "VISION STONES",
+    title: "VISION STONES | Mineral Manufacturing & Raw-Material Supply",
     description:
-      "Minerals engineered for industries that build tomorrow. High-purity Dolomite, Calcite, Limestone, Hydrated Lime & Calcium Carbonate.",
+      "Manufacturing roots dating back to 1997. High-purity Dolomite, Limestone, Lime, Calcite, and Calcium Carbonate supplied to 450+ clients across India.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/Products/Dolomite Powder.webp",
         width: 1200,
         height: 630,
-        alt: "Vision Stone Industrial Minerals",
+        alt: "Vision Stones Industrial Minerals",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "VISION STONE | Premium Mineral & Industrial Products",
-    description: "Minerals engineered for industries that build tomorrow.",
+    title: "VISION STONES | Mineral Manufacturing & Raw-Material Supply",
+    description: "Manufacturing roots dating back to 1997. Tirunelveli, Tamil Nadu, India.",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
   },
   robots: {
     index: true,
@@ -85,22 +97,20 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "VISION STONE",
+    name: "VISION STONES",
     url: "https://visionstone.in",
-    logo: "https://visionstone.in/logo.png",
     description:
-      "Premier industrial mineral processing company producing high-purity Dolomite, Calcite, Limestone, Hydrated Lime, and Calcium Carbonate.",
+      "Vision Stones: Mineral Manufacturing & Raw-Material Supply. Manufacturing roots dating back to 1997 in Tirunelveli, Tamil Nadu. Serving 450+ clients across India.",
     address: {
       "@type": "PostalAddress",
-      streetAddress: "Vision Stone Industrial Complex, Mineral Processing Zone",
-      addressLocality: "Salem Region",
+      addressLocality: "Tirunelveli",
       addressRegion: "Tamil Nadu",
-      postalCode: "636001",
       addressCountry: "IN",
     },
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+91-98765-43210",
+      telephone: "+91-83006-85057",
+      email: "visionstones.22@gmail.com",
       contactType: "sales",
       availableLanguage: ["English", "Tamil", "Hindi"],
     },
@@ -109,18 +119,20 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable} ${spaceMono.variable}`}>
       <head>
+        <link rel="canonical" href="https://visionstone.in" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+      </head>
+      <body className="antialiased bg-[#FFFFFF] text-[#111111] selection:bg-[#E52323] selection:text-white">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      </head>
-      <body className="bg-[#FFFFFF] text-[#111111] antialiased selection:bg-[#E52323] selection:text-white">
         <SmoothScrollProvider>
-          <Header />
-          <main id="main-content" className="min-h-screen">
-            {children}
-          </main>
-          <Footer />
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
         </SmoothScrollProvider>
       </body>
     </html>

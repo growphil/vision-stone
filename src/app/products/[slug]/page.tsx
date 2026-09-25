@@ -1,25 +1,26 @@
 import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowUpRight,
-  ShieldCheck,
-  CheckCircle2,
-  Package,
-  Layers,
-  Award,
-  Download,
-  Building2,
-  FlaskConical
-} from "lucide-react";
+import { ArrowRight, Package } from "lucide-react";
 import {
   PRODUCTS,
+  ALL_PRODUCTS,
   getProductBySlug,
-  getRelatedProducts,
-  Product,
+  type ProductItem,
 } from "@/data/products";
+
+// ============================================================
+// PRODUCT DETAIL PAGE
+// ============================================================
+// Dynamic route: /products/[slug]
+// Data source: data/products.ts (single source of truth)
+//
+// IMPORTANT:
+// Only renders fields where company-confirmed data exists.
+// Does NOT display fake specifications, applications, or claims.
+// ============================================================
 
 interface ProductPageProps {
   params: {
@@ -28,37 +29,32 @@ interface ProductPageProps {
 }
 
 export async function generateStaticParams() {
-  const params = PRODUCTS.map((product) => ({
+  return ALL_PRODUCTS.map((product) => ({
     slug: product.slug,
   }));
-  params.push({ slug: "kola-podi-powder" });
-  return params;
 }
 
-export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
   const product = getProductBySlug(params.slug);
   if (!product) {
-    return {
-      title: "Product Not Found | VISION STONE",
-    };
+    return { title: "Product Not Found | VISION STONES" };
   }
 
+  const description = product.description
+    ? `${product.name} — ${product.description}`
+    : `${product.name} | Vision Stones mineral product catalogue.`;
+
   return {
-    title: `${product.name} | ${product.brand} - Technical Specs & Industrial Supply`,
-    description: `${product.name} (${product.subtitle}). ${product.description.slice(0, 160)}`,
-    keywords: [
-      product.name,
-      product.brand,
-      product.category,
-      product.chemicalFormula || "",
-      "Industrial Mineral Supply",
-      "Vision Stone",
-      "Salem Minerals"
-    ],
+    title: `${product.name} | Vision Stones`,
+    description,
     openGraph: {
-      title: `${product.name} | VISION STONE`,
-      description: product.tagline,
-      type: "website",
+      title: `${product.name} | Vision Stones`,
+      description,
+      ...(product.image && {
+        images: [{ url: product.image, alt: product.imageAlt }],
+      }),
     },
   };
 }
@@ -70,356 +66,347 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  const relatedProducts = getRelatedProducts(product.slug, 3);
-  const isTraditional = product.categorySlug === "traditional-and-decorative";
+  // Related products: same category, exclude self, max 4
+  const sameCat = PRODUCTS.filter(
+    (p) =>
+      p.categorySlug === product.categorySlug && p.slug !== product.slug
+  );
+  const otherCat = PRODUCTS.filter(
+    (p) =>
+      p.categorySlug !== product.categorySlug && p.slug !== product.slug
+  );
+  const relatedProducts = [...sameCat, ...otherCat].slice(0, 4);
 
-  // Product JSON-LD for rich snippet
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    description: product.description,
-    brand: {
-      "@type": "Brand",
-      name: product.brand,
-    },
-    category: product.category,
-    offers: {
-      "@type": "AggregateOffer",
-      priceCurrency: "INR",
-      price: "Enquire for Contract Price",
-      availability: "https://schema.org/InStock",
-    },
-  };
+  const hasImage = product.image !== null;
+  const hasDescription = product.description !== null;
+  const hasOverview = product.detailedOverview !== null;
+  const hasGrades =
+    product.availableGrades !== null && product.availableGrades.length > 0;
+  const hasApplications =
+    product.keyApplications !== null && product.keyApplications.length > 0;
+  const hasForm = product.form !== null;
+  const hasPackaging = product.packaging !== null;
+  const hasSupply = product.supplyFormats !== null;
+  const hasAnySpec = hasForm || hasPackaging || hasSupply;
 
   return (
-    <div className="pt-28 pb-24 bg-[#070709] text-white min-h-screen">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="mb-8 flex items-center space-x-2 text-xs font-mono-code text-neutral-400">
-          <Link href="/" className="hover:text-white transition-colors">
-            Home
+    <main className="pt-24 sm:pt-36 pb-16 sm:pb-24 bg-[#FAFAF8] text-[#111111] min-h-screen font-display">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 space-y-12 sm:space-y-24">
+        {/* ——————————————————————————————————————
+            BREADCRUMB
+            —————————————————————————————————————— */}
+        <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-mono uppercase text-[#999999] overflow-x-auto no-scrollbar whitespace-nowrap -mx-4 px-4 sm:mx-0 sm:px-0">
+          <Link
+            href="/"
+            className="hover:text-[#111111] transition-colors shrink-0"
+          >
+            HOME
           </Link>
-          <span>/</span>
-          <Link href="/products" className="hover:text-white transition-colors">
-            Products
+          <span className="text-[#D4D4CE]">/</span>
+          <Link
+            href="/products"
+            className="hover:text-[#111111] transition-colors shrink-0"
+          >
+            CATALOGUE
           </Link>
-          <span>/</span>
-          <span className="text-neutral-500">{product.category}</span>
-          <span>/</span>
-          <span className="text-white font-bold">{product.name}</span>
-        </nav>
+          <span className="text-[#D4D4CE]">/</span>
+          <span className="text-[#E52323] font-bold shrink-0">
+            {product.name.toUpperCase()}
+          </span>
+        </div>
 
-        {/* Top Product Hero Block */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start pb-16 border-b border-white/10">
-          
-          {/* Left Column: Metadata & Hero Title (7 cols) */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono-code text-[#D62828]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D62828]" />
-                <span>{product.category.toUpperCase()}</span>
-              </span>
-
-              <span
-                className={`text-xs font-mono-code px-3 py-1 rounded-full border ${
-                  isTraditional
-                    ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
-                    : "bg-white/5 text-neutral-300 border-white/15"
-                }`}
-              >
-                Brand: <strong className="text-white">{product.brand}</strong>
-              </span>
-
-              <span className="text-xs font-mono-code text-neutral-400">
-                Formula: <strong className="text-white">{product.chemicalFormula || "Mineral Complex"}</strong>
-              </span>
+        {/* ——————————————————————————————————————
+            HERO: IMAGE + INTRO
+            —————————————————————————————————————— */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start pb-12 sm:pb-20 border-b border-[#E8E8E2]">
+          {/* Left: Product Image */}
+          <div className="lg:col-span-7">
+            <div className="relative w-full aspect-[4/3] overflow-hidden bg-[#F0F0EB] rounded-[4px]">
+              {hasImage ? (
+                <Image
+                  src={product.image!}
+                  alt={product.imageAlt}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 58vw"
+                  className="object-cover object-center"
+                />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Package
+                    className="w-16 h-16 text-[#C8C8C0] mb-3"
+                    strokeWidth={1}
+                  />
+                  <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#B0B0A8]">
+                    PRODUCT IMAGE
+                  </span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#C8C8C0] mt-1">
+                    TO BE SUPPLIED
+                  </span>
+                </div>
+              )}
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <h1 className="font-display font-extrabold text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight">
+          {/* Right: Title, Overview, CTAs */}
+          <div className="lg:col-span-5 space-y-5 sm:space-y-6">
+            <div className="space-y-2 sm:space-y-3">
+              <div className="flex items-center gap-2.5 text-[10px] font-mono font-medium text-[#E52323]">
+                <span>{product.number}</span>
+                <span className="w-6 h-[1px] bg-[#E52323]/30" />
+                <span className="uppercase tracking-widest">
+                  {product.category}
+                </span>
+              </div>
+
+              <h1 className="text-3xl sm:text-5xl lg:text-[56px] font-black uppercase tracking-tight text-[#111111] leading-[0.92]">
                 {product.name}
               </h1>
-              <p className="text-sm sm:text-base font-mono-code text-[#D62828] font-medium">
-                {product.subtitle}
-              </p>
-            </div>
 
-            <p className="text-sm sm:text-base text-neutral-300 leading-relaxed font-light">
-              {product.description}
-            </p>
-
-            {/* Quick Spec Highlights */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-              {product.whiteness && (
-                <div className="p-3 bg-white/[0.03] border border-white/10 rounded-sm">
-                  <span className="text-[10px] font-mono-code text-neutral-500 block">WHITENESS INDEX</span>
-                  <span className="text-sm font-mono-code text-white font-bold">{product.whiteness}</span>
-                </div>
-              )}
-              {product.meshSize && (
-                <div className="p-3 bg-white/[0.03] border border-white/10 rounded-sm">
-                  <span className="text-[10px] font-mono-code text-neutral-500 block">MESH / SIZING</span>
-                  <span className="text-sm font-mono-code text-white font-bold">{product.meshSize}</span>
-                </div>
-              )}
-              {product.purity && (
-                <div className="p-3 bg-white/[0.03] border border-white/10 rounded-sm">
-                  <span className="text-[10px] font-mono-code text-neutral-500 block">PURITY GRADE</span>
-                  <span className="text-sm font-mono-code text-white font-bold">{product.purity}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap items-center gap-4 pt-4">
-              <Link
-                href={`/contact?product=${encodeURIComponent(product.name)}`}
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#D62828] hover:bg-[#b52020] text-white font-semibold text-xs sm:text-sm font-mono-code uppercase tracking-widest rounded-sm transition-all shadow-xl shadow-[#D62828]/25 group"
-              >
-                <span>Enquire For Supply</span>
-                <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </Link>
-
-              <a
-                href="#specifications"
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-white/5 hover:bg-white/10 text-white font-semibold text-xs sm:text-sm font-mono-code uppercase tracking-widest rounded-sm border border-white/15 transition-all"
-              >
-                <span>View Full Specs</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Right Column: Key Features & Quality Box (5 cols) */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="mineral-card rounded-sm p-6 space-y-5 border border-white/15">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <span className="text-xs font-mono-code uppercase tracking-widest text-[#D62828] font-bold">
-                  Key Technical Advantages
-                </span>
-                <ShieldCheck className="w-4 h-4 text-[#D62828]" />
+              <div className="text-[10px] font-mono text-[#AAAAAA] uppercase tracking-wider pt-1">
+                SUPPLIED BY VISION STONES • EST. 1997
               </div>
+            </div>
 
-              <ul className="space-y-3">
-                {product.keyFeatures.map((feat, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-xs text-neutral-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#D62828] shrink-0 mt-0.5" />
-                    <span className="leading-relaxed">{feat}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="pt-4 border-t border-white/10 space-y-2">
-                <span className="text-[10px] font-mono-code text-neutral-500 uppercase block">
-                  Quality Assurance:
+            {/* Description */}
+            {hasOverview ? (
+              <p className="text-[14px] sm:text-base text-[#555555] leading-relaxed">
+                {product.detailedOverview}
+              </p>
+            ) : hasDescription ? (
+              <p className="text-[14px] sm:text-base text-[#555555] leading-relaxed">
+                {product.description}
+              </p>
+            ) : (
+              <div className="py-4 sm:py-5 px-5 sm:px-6 bg-[#F5F5F0] border-l-2 border-[#E52323]">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#AAAAAA] block mb-1">
+                  PRODUCT INFORMATION
                 </span>
-                <p className="text-xs text-neutral-400 font-light leading-relaxed">
-                  {product.qualityAssurance}
+                <p className="text-xs sm:text-sm text-[#888888] leading-relaxed">
+                  Detailed product information to be supplied by Vision
+                  Stones. Contact us for specifications and availability.
                 </p>
               </div>
-            </div>
-          </div>
+            )}
 
-        </div>
-
-        {/* Detailed Overview Section */}
-        <div className="py-14 border-b border-white/10 space-y-6">
-          <div className="max-w-3xl space-y-3">
-            <span className="text-xs font-mono-code text-[#D62828] uppercase tracking-widest block">
-              Overview & Processing
-            </span>
-            <h2 className="font-display font-bold text-2xl sm:text-3xl text-white">
-              Industrial Grade Mineral Engineering
-            </h2>
-            <p className="text-sm text-neutral-300 leading-relaxed font-light">
-              {product.detailedOverview}
-            </p>
-          </div>
-        </div>
-
-        {/* Technical Specifications Table */}
-        <div className="py-14 border-b border-white/10 space-y-8" id="specifications">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <span className="text-xs font-mono-code text-[#D62828] uppercase tracking-widest block">
-                Chemical & Physical Parameters
-              </span>
-              <h2 className="font-display font-bold text-2xl sm:text-3xl text-white">
-                Technical Specification Sheet
-              </h2>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-mono-code text-neutral-400 bg-white/5 px-3 py-1.5 rounded border border-white/10">
-              <FlaskConical className="w-4 h-4 text-[#D62828]" />
-              <span>Laboratory Assay Standard</span>
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="overflow-x-auto border border-white/10 rounded-sm">
-            <table className="w-full text-left text-xs sm:text-sm font-mono-code">
-              <thead className="bg-[#121216] border-b border-white/10 text-neutral-400 uppercase text-[11px] tracking-wider">
-                <tr>
-                  <th className="py-3.5 px-5 font-bold">Parameter / Test Property</th>
-                  <th className="py-3.5 px-5 font-bold">Guaranteed Standard</th>
-                  <th className="py-3.5 px-5 font-bold">Typical Analysis</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 bg-black/40">
-                {product.specifications.map((spec, idx) => (
-                  <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-5 text-white font-medium">{spec.parameter}</td>
-                    <td className="py-3 px-5 text-neutral-300">{spec.value}</td>
-                    <td className="py-3 px-5 text-[#D62828] font-bold">
-                      {spec.typical || "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Applications & Packaging Grid */}
-        <div className="py-14 border-b border-white/10 grid grid-cols-1 lg:grid-cols-2 gap-10">
-          
-          {/* Applications List */}
-          <div className="space-y-6">
-            <div className="space-y-1">
-              <span className="text-xs font-mono-code text-[#D62828] uppercase tracking-widest block">
-                Target Industries
-              </span>
-              <h2 className="font-display font-bold text-2xl text-white">
-                Key Industrial Applications
-              </h2>
-            </div>
-
-            <div className="space-y-3">
-              {product.applications.map((app, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 bg-white/[0.02] border border-white/10 rounded-sm flex items-start gap-3"
-                >
-                  <span className="w-2 h-2 rounded-full bg-[#D62828] mt-1.5 shrink-0" />
-                  <span className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-light">
-                    {app}
-                  </span>
+            {/* Grades */}
+            {hasGrades && (
+              <div className="pt-4 border-t border-[#EAEAE4] space-y-2.5">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#111111] block">
+                  AVAILABLE SIZING & GRADES
+                </span>
+                <div className="space-y-1.5 sm:space-y-2">
+                  {product.availableGrades!.map((grade) => (
+                    <div
+                      key={grade}
+                      className="flex items-center gap-2.5 text-xs sm:text-sm font-mono text-[#444444]"
+                    >
+                      <span className="w-1.5 h-1.5 bg-[#E52323] shrink-0" />
+                      <span>{grade}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            )}
+
+            {/* CTAs */}
+            <div className="pt-4 sm:pt-5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-5">
+              <Link
+                href={`/contact?product=${encodeURIComponent(product.name)}`}
+                className="inline-flex items-center justify-center gap-2 bg-[#E52323] text-white hover:bg-[#C91A1A] text-xs font-bold uppercase tracking-wider px-7 py-3.5 transition-all group text-center shadow-sm"
+              >
+                <span>REQUEST A QUOTE</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+
+              <Link
+                href="/products"
+                className="inline-flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-[#111111] hover:text-[#E52323] py-3.5 border-b border-[#111111] hover:border-[#E52323] transition-colors text-center"
+              >
+                BACK TO CATALOGUE
+              </Link>
             </div>
           </div>
+        </div>
 
-          {/* Packaging & Logistics */}
-          <div className="space-y-6">
+        {/* ——————————————————————————————————————
+            PRODUCT SPECS (only if confirmed data)
+            —————————————————————————————————————— */}
+        {hasAnySpec && (
+          <div className="pb-16 sm:pb-20 border-b border-[#E8E8E2] space-y-8">
             <div className="space-y-1">
-              <span className="text-xs font-mono-code text-[#D62828] uppercase tracking-widest block">
-                Packaging & Dispatch
+              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-[#E52323]">
+                PRODUCT INFORMATION
               </span>
-              <h2 className="font-display font-bold text-2xl text-white">
-                Packaging Configurations
+              <h2 className="text-2xl sm:text-3xl font-black uppercase text-[#111111]">
+                SUPPLY & HANDLING DETAILS
               </h2>
             </div>
 
-            <div className="mineral-card rounded-sm p-6 space-y-4">
-              <div className="flex items-center gap-3 text-white font-mono-code text-xs font-bold">
-                <Package className="w-4 h-4 text-[#D62828]" />
-                <span>Available Commercial Formats</span>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {product.packaging.types.map((type, idx) => (
-                  <span
-                    key={idx}
-                    className="text-xs font-mono-code px-3 py-1.5 bg-white/5 border border-white/10 rounded text-neutral-300"
-                  >
-                    {type}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
+              {hasForm && (
+                <div className="space-y-1.5 border-t border-[#EAEAE4] pt-4">
+                  <span className="text-[10px] font-mono text-[#999999] uppercase block">
+                    AVAILABLE FORM
                   </span>
+                  <div className="font-bold text-sm uppercase text-[#111111]">
+                    {product.form}
+                  </div>
+                </div>
+              )}
+              {hasSupply && (
+                <div className="space-y-1.5 border-t border-[#EAEAE4] pt-4">
+                  <span className="text-[10px] font-mono text-[#999999] uppercase block">
+                    SUPPLY FORMATS
+                  </span>
+                  <p className="text-sm text-[#555555] leading-relaxed">
+                    {product.supplyFormats}
+                  </p>
+                </div>
+              )}
+              {hasPackaging && (
+                <div className="space-y-1.5 border-t border-[#EAEAE4] pt-4">
+                  <span className="text-[10px] font-mono text-[#999999] uppercase block">
+                    PACKAGING
+                  </span>
+                  <p className="text-sm text-[#555555] leading-relaxed">
+                    {product.packaging}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ——————————————————————————————————————
+            APPLICATIONS (only if confirmed)
+            —————————————————————————————————————— */}
+        {hasApplications && (
+          <div className="pb-16 sm:pb-20 border-b border-[#E8E8E2] grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div className="lg:col-span-4 space-y-2">
+              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-[#E52323]">
+                TARGET APPLICATIONS
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black uppercase text-[#111111]">
+                SUITABLE APPLICATIONS
+              </h2>
+            </div>
+            <div className="lg:col-span-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {product.keyApplications!.map((app) => (
+                  <div
+                    key={app}
+                    className="p-4 bg-white border border-[#E8E8E2] flex items-start gap-3"
+                  >
+                    <span className="w-1.5 h-1.5 bg-[#E52323] mt-2 shrink-0" />
+                    <span className="text-sm font-medium text-[#333333]">
+                      {app}
+                    </span>
+                  </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
 
-              <p className="text-xs text-neutral-400 leading-relaxed font-light pt-2">
-                {product.packaging.details}
+        {/* ——————————————————————————————————————
+            REQUEST A QUOTE SECTION
+            —————————————————————————————————————— */}
+        <div className="p-8 sm:p-12 bg-white border border-[#E8E8E2]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-xl">
+              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-[#E52323]">
+                INQUIRE SUPPLY
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black uppercase text-[#111111]">
+                REQUEST A QUOTE FOR {product.name.toUpperCase()}
+              </h2>
+              <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
+                Tell us your required quantity, specifications, packaging
+                preference, and delivery destination.
               </p>
             </div>
+            <Link
+              href={`/contact?product=${encodeURIComponent(product.name)}`}
+              className="inline-flex items-center gap-2 bg-[#E52323] text-white hover:bg-[#C91A1A] text-xs font-bold uppercase tracking-wider px-8 py-4 transition-all shrink-0 self-start md:self-center group"
+            >
+              <span>DISCUSS REQUIREMENT</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
           </div>
-
         </div>
 
-        {/* Related Products */}
-        <div className="py-14 space-y-8">
-          <div className="flex items-center justify-between">
+        {/* ——————————————————————————————————————
+            RELATED PRODUCTS
+            —————————————————————————————————————— */}
+        <div className="space-y-10">
+          <div className="flex items-center justify-between border-b border-[#E8E8E2] pb-6">
             <div className="space-y-1">
-              <span className="text-xs font-mono-code text-[#D62828] uppercase tracking-widest block">
-                Complementary Minerals
+              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-[#E52323]">
+                FROM THE CATALOGUE
               </span>
-              <h2 className="font-display font-bold text-2xl text-white">
-                Related Industrial Minerals
-              </h2>
+              <h3 className="text-2xl sm:text-3xl font-black uppercase text-[#111111]">
+                RELATED PRODUCTS
+              </h3>
             </div>
-
             <Link
               href="/products"
-              className="text-xs font-mono-code text-neutral-400 hover:text-white uppercase tracking-wider flex items-center gap-1"
+              className="text-[11px] font-bold uppercase tracking-wider text-[#111111] hover:text-[#E52323] transition-colors"
             >
-              <span>View All</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
+              VIEW FULL CATALOGUE →
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {relatedProducts.map((rel) => (
-              <Link
-                key={rel.id}
-                href={`/products/${rel.slug}`}
-                className="mineral-card p-6 rounded-sm space-y-4 group hover:border-white/30 transition-all flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-[10px] font-mono-code text-neutral-500">
-                    <span>{rel.category}</span>
-                    <span className="text-[#D62828]">{rel.brand}</span>
-                  </div>
-                  <h3 className="font-display font-bold text-lg text-white group-hover:text-white transition-colors">
-                    {rel.name}
-                  </h3>
-                  <p className="text-xs text-neutral-400 line-clamp-2">
-                    {rel.tagline}
-                  </p>
-                </div>
+              <div key={rel.id} className="group">
+                <Link
+                  href={`/products/${rel.slug}`}
+                  className="relative block w-full aspect-[4/3] overflow-hidden bg-[#F0F0EB]"
+                >
+                  {rel.image ? (
+                    <Image
+                      src={rel.image}
+                      alt={rel.imageAlt}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className="object-cover object-center transition-transform duration-600 ease-out group-hover:scale-[1.04]"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <Package
+                        className="w-6 h-6 text-[#C8C8C0] mb-1.5"
+                        strokeWidth={1}
+                      />
+                      <span className="text-[8px] font-mono font-bold uppercase tracking-widest text-[#B0B0A8]">
+                        IMAGE PENDING
+                      </span>
+                    </div>
+                  )}
+                </Link>
 
-                <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono-code text-neutral-400 group-hover:text-white transition-colors">
-                  <span>View Product</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 group-hover:text-[#D62828]" />
+                <div className="pt-3 space-y-1">
+                  <div className="text-[10px] font-mono font-medium text-[#E52323] uppercase tracking-widest">
+                    {rel.category}
+                  </div>
+                  <h4 className="text-base font-black uppercase text-[#111111] leading-tight">
+                    <Link href={`/products/${rel.slug}`}>
+                      {rel.name}
+                    </Link>
+                  </h4>
+                  <Link
+                    href={`/products/${rel.slug}`}
+                    className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#111111] hover:text-[#E52323] transition-colors"
+                  >
+                    <span>VIEW PRODUCT</span>
+                    <ArrowRight className="w-3 h-3 text-[#E52323]" />
+                  </Link>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>
-
-        {/* Final Product Enquiry Trigger */}
-        <div className="mt-8 p-8 sm:p-12 bg-gradient-to-r from-[#14141A] via-[#1A1A22] to-[#14141A] border border-[#D62828]/40 rounded-sm text-center space-y-6">
-          <h2 className="font-display font-bold text-2xl sm:text-4xl text-white">
-            Discuss Your Technical Requirement for {product.name}
-          </h2>
-          <p className="text-xs sm:text-sm text-neutral-300 max-w-xl mx-auto font-light">
-            Contact our mineral engineers for volume pricing, laboratory testing certificates, or custom grain sizing.
-          </p>
-          <div className="flex justify-center">
-            <Link
-              href={`/contact?product=${encodeURIComponent(product.name)}`}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-[#D62828] hover:bg-[#b52020] text-white font-bold text-xs sm:text-sm font-mono-code uppercase tracking-widest rounded-sm transition-all shadow-xl shadow-[#D62828]/30"
-            >
-              <span>Submit Commercial Enquiry</span>
-              <ArrowUpRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-
       </div>
-    </div>
+    </main>
   );
 }

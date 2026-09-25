@@ -4,22 +4,22 @@ import { ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-[#070709] text-white flex items-center justify-center px-6">
-      <div className="text-center space-y-6 max-w-md">
-        <div className="w-12 h-12 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
-          <span className="font-mono-code font-bold text-lg text-[#D62828]">404</span>
+    <div className="min-h-screen bg-[#FFFFFF] text-[#111111] flex items-center justify-center px-6 font-display">
+      <div className="text-center space-y-6 max-w-md bg-[#FAF9F6] p-10 rounded-[12px] border border-[#E8E8E4] shadow-subtle">
+        <div className="w-12 h-12 rounded-[4px] bg-white border border-[#E0E0DB] flex items-center justify-center mx-auto text-[#E52323] font-mono font-black text-lg">
+          404
         </div>
         <div className="space-y-2">
-          <h1 className="font-display font-bold text-3xl text-white">
-            Page Not Found
+          <h1 className="text-2xl sm:text-3xl font-black uppercase text-[#111111]">
+            PAGE NOT FOUND
           </h1>
-          <p className="text-xs text-neutral-400">
+          <p className="text-xs sm:text-sm text-[#555555]">
             The requested mineral product or page route does not exist.
           </p>
         </div>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#D62828] hover:bg-[#b52020] text-white font-mono-code text-xs uppercase tracking-wider font-bold rounded-sm transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#E52323] hover:bg-[#C91A1A] text-white text-xs uppercase tracking-wider font-bold rounded-[4px] transition-colors shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Return to Homepage</span>
