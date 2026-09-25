@@ -20,6 +20,7 @@ export interface CompanyInfo {
   vision: string;
   coreValues: {
     name: string;
+    title?: string;
     description: string;
   }[];
   whyUs: {
@@ -64,26 +65,32 @@ export const COMPANY_INFO: CompanyInfo = {
   coreValues: [
     {
       name: "Reliability",
+      title: "Reliability",
       description: "Consistent delivery of confirmed product grades, mesh sizes, and schedules without compromise.",
     },
     {
       name: "Quality",
+      title: "Quality",
       description: "Meeting agreed specifications and particle size requirements on every dispatch.",
     },
     {
       name: "Responsiveness",
+      title: "Responsiveness",
       description: "Prompt attention to customer enquiries, sample requests, and evolving delivery timelines.",
     },
     {
       name: "Flexibility",
+      title: "Flexibility",
       description: "Adapting particle size, packaging, and order quantities to specific industrial processes.",
     },
     {
       name: "Integrity",
+      title: "Integrity",
       description: "Straightforward communication regarding product availability, lead times, and supply commitments.",
     },
     {
       name: "Long-Term Partnerships",
+      title: "Long-Term Partnerships",
       description: "Cultivating enduring commercial relationships founded on mutual trust and dependable supply.",
     },
   ],
