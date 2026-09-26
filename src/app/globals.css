@@ -106,11 +106,11 @@ a:focus-visible {
   scrollbar-width: none;
 }
 
-/* Stage transition animation for cinematic hero */
-@keyframes stageFade {
+/* Stage transition animation for cinematic hero (1.8s smooth fade) */
+@keyframes stageFadeUp {
   0% {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(28px);
   }
   100% {
     opacity: 1;
@@ -119,7 +119,8 @@ a:focus-visible {
 }
 
 .animate-stage-fade {
-  animation: stageFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: stageFadeUp 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
 }
 
 /* Reduced motion support */

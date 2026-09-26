@@ -31,7 +31,7 @@ export default function HomePage() {
   return (
     <main className="flex flex-col w-full bg-[#FFFFFF] text-[#111111]">
       {/* 01: CINEMATIC HERO (240-frame scroll-driven Dolomite sequence) */}
-      <ImageSequence totalFrames={240} folderPath="/dolomite-powder" />
+      <ImageSequence totalFrames={240} folderPath="/dolomite -powder 2" />
 
       {/* 02: PRODUCT UNIVERSE */}
       <ProductUniverse />

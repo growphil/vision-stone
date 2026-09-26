@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SmoothScrollProvider from "@/components/layout/SmoothScrollProvider";
+import FloatingContactWidget from "@/components/layout/FloatingContactWidget";
 import { COMPANY_INFO } from "@/data/company";
 
 const inter = Inter({
@@ -133,6 +134,7 @@ export default function RootLayout({
             <div className="flex-1">{children}</div>
             <Footer />
           </div>
+          <FloatingContactWidget />
         </SmoothScrollProvider>
       </body>
     </html>

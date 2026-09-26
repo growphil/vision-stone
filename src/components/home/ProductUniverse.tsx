@@ -58,18 +58,18 @@ export default function ProductUniverse() {
         </div>
 
         {/* GRID */}
-        <div className="mt-8 sm:mt-10 lg:mt-12 space-y-4 lg:space-y-5">
+        <div className="mt-8 sm:mt-10 lg:mt-12 space-y-4 lg:space-y-6">
           {/* ROW 1: Intro + Hero Dolomite Powder */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-stretch">
             {/* Intro */}
-            <div className="lg:col-span-3 flex flex-col justify-between py-2 sm:py-4 pr-0 lg:pr-4">
+            <div className="lg:col-span-4 flex flex-col justify-between py-2 sm:py-4 pr-0 lg:pr-4">
               <div className="space-y-3 sm:space-y-5">
-                <h2 className="text-[38px] xs:text-[46px] sm:text-[62px] lg:text-[70px] font-black uppercase tracking-tight leading-[0.92] text-[#111111]">
+                <h2 className="text-[36px] xs:text-[42px] sm:text-[54px] lg:text-[44px] xl:text-[52px] 2xl:text-[58px] font-black uppercase tracking-tight leading-[0.92] text-[#111111]">
                   PRODUCT
                   <br />
                   <span className="text-[#E52323]">UNIVERSE</span>
                 </h2>
-                <p className="text-[#666666] text-sm sm:text-[18px] lg:text-[19px] leading-snug font-normal">
+                <p className="text-[#666666] text-sm sm:text-[17px] lg:text-[18px] leading-snug font-normal max-w-sm">
                   Minerals refined for
                   <br />
                   modern industry.
@@ -92,7 +92,7 @@ export default function ProductUniverse() {
               <Link
                 href={`/products/${hero.slug}`}
                 aria-label={`View ${hero.name}`}
-                className="lg:col-span-9 relative min-h-[340px] sm:min-h-[420px] lg:min-h-[430px] rounded-[10px] overflow-hidden group cursor-pointer border border-[#E8E8E2] bg-white flex flex-col justify-between p-5 sm:p-10 lg:p-12 shadow-sm"
+                className="lg:col-span-8 relative min-h-[340px] sm:min-h-[420px] lg:min-h-[440px] rounded-[10px] overflow-hidden group cursor-pointer border border-[#E8E8E2] bg-white flex flex-col justify-between p-5 sm:p-10 lg:p-12 shadow-sm"
               >
                 <Image
                   src={hero.image}

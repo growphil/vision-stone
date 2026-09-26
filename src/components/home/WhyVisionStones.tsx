@@ -3,8 +3,29 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  Factory,
+  Users,
+  Building2,
+  Compass,
+  Truck,
+  Boxes,
+  MessageSquare,
+  Handshake,
+} from "lucide-react";
 import { COMPANY_INFO } from "@/data/company";
+
+const PILLAR_ICONS = [
+  Factory,        // 01: MANUFACTURING ROOTS SINCE 1997
+  Users,          // 02: 450+ CLIENTS
+  Building2,      // 03: MANUFACTURING INFRASTRUCTURE
+  Compass,        // 04: MODERN BRAND DIRECTION
+  Truck,          // 05: FLEXIBLE SUPPLY
+  Boxes,          // 06: MULTIPLE PRODUCTS
+  MessageSquare,  // 07: DIRECT COMMUNICATION
+  Handshake,      // 08: LONG-TERM RELATIONSHIPS
+];
 
 export default function WhyVisionStones() {
   return (
@@ -100,33 +121,42 @@ export default function WhyVisionStones() {
         </div>
 
         {/* ========================================================
-            COMPACT TYPOGRAPHIC PILLARS LIST
-            8 Factual points presented via clean typography and spacing
-            NO CARDS. NO REPEATED ROUNDED BOXES.
+            ICON-ENHANCED CAPABILITY PILLARS LIST
+            8 Factual points with modern Lucide React icons
             ======================================================== */}
         <div className="mt-16 sm:mt-24 pt-12 sm:pt-16 border-t border-[#E8E8E2]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
-            {COMPANY_INFO.whyUs.map((pillar) => (
-              <div
-                key={pillar.number}
-                className="space-y-2 border-b border-[#EAEAE4] pb-6 sm:border-b-0 sm:pb-0"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-[#E52323]">
-                    {pillar.number}
-                  </span>
-                  <span className="w-6 h-[1px] bg-[#D4D4CE]" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            {COMPANY_INFO.whyUs.map((pillar, index) => {
+              const IconComponent = PILLAR_ICONS[index % PILLAR_ICONS.length];
+
+              return (
+                <div
+                  key={pillar.number}
+                  className="group space-y-3.5 border-b border-[#EAEAE4] pb-6 sm:border border-transparent sm:hover:border-[#E8E8E2] sm:p-5 sm:rounded-[8px] sm:hover:bg-white sm:hover:shadow-sm sm:pb-5 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-[6px] bg-white group-hover:bg-[#E52323] border border-[#E8E8E2] group-hover:border-[#E52323] flex items-center justify-center text-[#E52323] group-hover:text-white transition-all duration-300 shadow-xs">
+                      <IconComponent className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-[#E52323]">
+                        {pillar.number}
+                      </span>
+                      <span className="w-4 h-[1px] bg-[#D4D4CE]" />
+                    </div>
+                  </div>
+
+                  <h3 className="text-base sm:text-[17px] font-black uppercase tracking-tight text-[#111111] leading-snug group-hover:text-[#E52323] transition-colors">
+                    {pillar.title}
+                  </h3>
+
+                  <p className="text-xs sm:text-[13px] text-[#666666] leading-relaxed">
+                    {pillar.description}
+                  </p>
                 </div>
-
-                <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-[#111111] leading-snug">
-                  {pillar.title}
-                </h3>
-
-                <p className="text-xs sm:text-[13px] text-[#666666] leading-relaxed">
-                  {pillar.description}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

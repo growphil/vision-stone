@@ -75,21 +75,21 @@ const STAGES: Record<number, StageData> = {
 
 /**
  * Single source of truth: frame index -> stage mapping
- * frames 1–50   (indices 0–49)   -> STAGE 1
- * frames 51–110 (indices 50–109)  -> STAGE 2
- * frames 111–180 (indices 110–179) -> STAGE 3
- * frames 181–240 (indices 180–239) -> STAGE 4
+ * frames 1–50   (indices 0–49)    -> STAGE 1
+ * frames 51–110 (indices 50–109)   -> STAGE 2
+ * frames 111–206 (indices 110–205)  -> STAGE 3
+ * frames 207–240 (indices 206–239)  -> STAGE 4 (Triggered at ezgif-frame-207)
  */
 function getStageFromFrame(frameIndex: number): number {
   if (frameIndex < 50) return 1;
   if (frameIndex < 110) return 2;
-  if (frameIndex < 180) return 3;
+  if (frameIndex < 206) return 3;
   return 4;
 }
 
 export default function ImageSequence({
   totalFrames = 240,
-  folderPath = "/dolomite-powder",
+  folderPath = "/dolomite -powder 2",
 }: ImageSequenceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -102,9 +102,13 @@ export default function ImageSequence({
   const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
   const currentFrameIndexRef = useRef<number>(0);
 
-  // Frame URL formatter (e.g. 1 -> "/dolomite-powder/0001.jpg")
+  // Frame URL formatter (e.g. 1 -> "/dolomite -powder 2/ezgif-frame-001.jpg")
   const getFrameUrl = useCallback(
     (index: number) => {
+      if (folderPath.includes("dolomite -powder 2")) {
+        const paddedIndex = String(index).padStart(3, "0");
+        return `${folderPath}/ezgif-frame-${paddedIndex}.jpg`;
+      }
       const paddedIndex = String(index).padStart(4, "0");
       return `${folderPath}/${paddedIndex}.jpg`;
     },
@@ -144,6 +148,9 @@ export default function ImageSequence({
       const imageWidth = img.naturalWidth;
       const imageHeight = img.naturalHeight;
 
+      // Detect mobile viewport
+      const isMobile = window.innerWidth < 768;
+
       // Exact cover scaling
       const scale = Math.max(
         canvasWidth / imageWidth,
@@ -153,18 +160,29 @@ export default function ImageSequence({
       const drawWidth = imageWidth * scale;
       const drawHeight = imageHeight * scale;
 
-      const offsetX = (canvasWidth - drawWidth) / 2;
-      const offsetY = (canvasHeight - drawHeight) / 2;
+      // Balanced focal positioning for desktop and mobile
+      const focalX = isMobile ? 0.50 : 0.50;
+      const focalY = isMobile ? 0.50 : 0.50;
+
+      const offsetX = (canvasWidth - drawWidth) * focalX;
+      const offsetY = (canvasHeight - drawHeight) * focalY;
 
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
-      // Subtle editorial vignette for crisp text legibility
+      // Subtle editorial vignette (enhanced bottom gradient on mobile for text legibility)
       const edgeGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-      edgeGradient.addColorStop(0, "rgba(0, 0, 0, 0.45)");
-      edgeGradient.addColorStop(0.2, "rgba(0, 0, 0, 0.15)");
-      edgeGradient.addColorStop(0.6, "rgba(0, 0, 0, 0.20)");
-      edgeGradient.addColorStop(1, "rgba(0, 0, 0, 0.70)");
+      if (isMobile) {
+        edgeGradient.addColorStop(0, "rgba(0, 0, 0, 0.55)");
+        edgeGradient.addColorStop(0.25, "rgba(0, 0, 0, 0.15)");
+        edgeGradient.addColorStop(0.55, "rgba(0, 0, 0, 0.35)");
+        edgeGradient.addColorStop(1, "rgba(0, 0, 0, 0.85)");
+      } else {
+        edgeGradient.addColorStop(0, "rgba(0, 0, 0, 0.45)");
+        edgeGradient.addColorStop(0.2, "rgba(0, 0, 0, 0.15)");
+        edgeGradient.addColorStop(0.6, "rgba(0, 0, 0, 0.20)");
+        edgeGradient.addColorStop(1, "rgba(0, 0, 0, 0.70)");
+      }
       ctx.fillStyle = edgeGradient;
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     },
@@ -375,10 +393,10 @@ export default function ImageSequence({
       />
 
       {/* TOP BRAND INDICATOR (z-30) */}
-      <div className="absolute top-16 sm:top-24 left-4 sm:left-12 lg:left-16 z-30 pointer-events-none">
+      <div className="absolute top-20 sm:top-24 left-4 sm:left-12 lg:left-16 z-30 pointer-events-none">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="w-1.5 h-1.5 rounded-full bg-[#E52323] animate-pulse shrink-0" />
-          <span className="text-[10px] sm:text-xs font-display uppercase tracking-[0.16em] sm:tracking-[0.22em] text-white/85 font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+          <span className="text-[9px] xs:text-[10px] sm:text-xs font-display uppercase tracking-[0.16em] sm:tracking-[0.22em] text-white/90 font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
             VISION STONES <span className="text-white/40">/</span> MINERAL TRANSFORMATION
           </span>
         </div>
@@ -390,34 +408,34 @@ export default function ImageSequence({
           Positioned as ONE unified editorial block.
           ======================================================== */}
       <div
-        className="hero-content absolute left-4 sm:left-12 lg:left-16 bottom-6 sm:bottom-16 lg:bottom-24 w-[calc(100%-2rem)] sm:max-w-xl lg:max-w-2xl xl:max-w-3xl z-20 pointer-events-none"
+        className="hero-content absolute left-4 sm:left-12 lg:left-16 bottom-6 sm:bottom-14 lg:bottom-24 w-[calc(100%-2rem)] sm:max-w-xl lg:max-w-2xl xl:max-w-3xl z-20 pointer-events-none"
       >
         <div
           key={`stage-${activeStage}`}
           className="cinematic-stage-content animate-stage-fade text-left"
         >
           {/* STAGE LABEL */}
-          <div className="flex items-center gap-2 sm:gap-2.5 text-[10px] sm:text-xs font-display font-bold uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#E52323] mb-3 sm:mb-5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+          <div className="flex items-center gap-2 sm:gap-2.5 text-[9px] xs:text-[10px] sm:text-xs font-display font-bold uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#E52323] mb-2 sm:mb-5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
             <span className="text-white/70">STAGE {currentStage.step}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
             <span>{currentStage.theme}</span>
           </div>
 
           {/* MAIN HEADLINE */}
-          <h1 className="hero-title font-display font-black text-2xl xs:text-3xl sm:text-5xl lg:text-[72px] xl:text-[80px] text-white uppercase tracking-tighter leading-[0.95] sm:leading-[0.92] mb-3 sm:mb-6 drop-shadow-[0_6px_30px_rgba(0,0,0,0.95)]">
+          <h1 className="hero-title font-display font-black text-xl xs:text-2xl sm:text-5xl lg:text-[72px] xl:text-[80px] text-white uppercase tracking-tighter leading-[1.0] sm:leading-[0.92] mb-2.5 sm:mb-6 drop-shadow-[0_6px_30px_rgba(0,0,0,0.95)]">
             {currentStage.title}
           </h1>
 
           {/* DESCRIPTION */}
-          <p className="hero-description text-xs sm:text-base lg:text-lg text-white/85 font-display font-normal max-w-xl leading-relaxed mb-4 sm:mb-7 drop-shadow-[0_3px_12px_rgba(0,0,0,0.9)]">
+          <p className="hero-description text-[11px] xs:text-xs sm:text-base lg:text-lg text-white/90 font-display font-normal max-w-xs sm:max-w-xl leading-relaxed mb-3 sm:mb-7 drop-shadow-[0_3px_12px_rgba(0,0,0,0.9)]">
             {currentStage.supporting}
           </p>
 
           {/* STAGE 4 EXCLUSIVE CTAS (ONLY ON FINISHED PRODUCT) */}
           {currentStage.hasCta && (
-            <div className="hero-cta pointer-events-auto space-y-3 sm:space-y-4 pt-1">
+            <div className="hero-cta pointer-events-auto space-y-2.5 sm:space-y-4 pt-1">
               {/* Trust Tag */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-5 text-[10px] sm:text-xs font-display uppercase tracking-widest text-white/80 font-bold border-t border-white/20 pt-3 sm:pt-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-5 text-[9px] xs:text-[10px] sm:text-xs font-display uppercase tracking-widest text-white/85 font-bold border-t border-white/20 pt-2.5 sm:pt-4">
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
                   <span>MANUFACTURING ROOTS SINCE 1997</span>
@@ -430,10 +448,10 @@ export default function ImageSequence({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-1">
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 pt-0.5">
                 <Link
                   href="#products"
-                  className="inline-flex items-center gap-2 text-xs sm:text-sm font-display font-bold uppercase tracking-widest text-white hover:text-[#E52323] transition-colors py-2 cursor-pointer group"
+                  className="inline-flex items-center gap-1.5 text-[11px] sm:text-sm font-display font-bold uppercase tracking-widest text-white hover:text-[#E52323] transition-colors py-1.5 cursor-pointer group"
                 >
                   <span className="border-b-2 border-white group-hover:border-[#E52323] pb-0.5 transition-colors">
                     VIEW PRODUCTS →
@@ -442,7 +460,7 @@ export default function ImageSequence({
 
                 <Link
                   href="/contact"
-                  className="inline-flex items-center gap-2 bg-[#E52323] text-white hover:bg-[#C91A1A] text-xs sm:text-sm font-display font-bold uppercase tracking-wider px-4 sm:px-5 py-2.5 transition-all shadow-lg hover:shadow-[#E52323]/25"
+                  className="inline-flex items-center gap-1.5 bg-[#E52323] text-white hover:bg-[#C91A1A] text-[11px] sm:text-sm font-display font-bold uppercase tracking-wider px-3.5 sm:px-5 py-2 sm:py-2.5 transition-all shadow-lg hover:shadow-[#E52323]/25"
                 >
                   <span>REQUEST A QUOTE</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
