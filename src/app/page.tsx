@@ -30,8 +30,13 @@ const ImageSequence = dynamic(() => import("@/components/home/ImageSequence"), {
 export default function HomePage() {
   return (
     <main className="flex flex-col w-full bg-[#FFFFFF] text-[#111111]">
-      {/* 01: CINEMATIC HERO (240-frame scroll-driven Dolomite sequence) */}
-      <ImageSequence totalFrames={240} folderPath="/dolomite -powder 2" />
+      {/* 01: CINEMATIC HERO (Responsive Desktop / Mobile Dolomite sequence) */}
+      <ImageSequence
+        desktopFolderPath="/dolomite -powder 2"
+        mobileFolderPath="/mobile hero"
+        desktopTotalFrames={240}
+        mobileTotalFrames={240}
+      />
 
       {/* 02: PRODUCT UNIVERSE */}
       <ProductUniverse />
