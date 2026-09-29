@@ -17,7 +17,7 @@ const NAV_LINKS = [
 export default function Header() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isOverHero, setIsOverHero] = useState(false);
+  const [isOverHero, setIsOverHero] = useState(() => pathname === "/");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -35,21 +35,40 @@ export default function Header() {
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
 
-    // Use IntersectionObserver instead of getBoundingClientRect() to avoid forced reflows during scroll
     let observer: IntersectionObserver | null = null;
+    let pollInterval: NodeJS.Timeout | null = null;
+
     if (pathname === "/") {
-      const heroElement = document.getElementById("cinematic-hero");
-      if (heroElement) {
-        observer = new IntersectionObserver(
-          (entries) => {
-            const entry = entries[0];
-            setIsOverHero(entry.isIntersecting);
-          },
-          { rootMargin: "-70px 0px 0px 0px", threshold: 0 }
-        );
-        observer.observe(heroElement);
-      } else {
-        setIsOverHero(false);
+      setIsOverHero(true);
+
+      const attachHeroObserver = () => {
+        const heroElement = document.getElementById("cinematic-hero");
+        if (heroElement) {
+          observer = new IntersectionObserver(
+            (entries) => {
+              const entry = entries[0];
+              const intersecting = entry.isIntersecting;
+              setIsOverHero(intersecting);
+              if (intersecting) {
+                setMobileMenuOpen(false);
+              }
+            },
+            { rootMargin: "0px", threshold: 0.05 }
+          );
+          observer.observe(heroElement);
+          return true;
+        }
+        return false;
+      };
+
+      const attached = attachHeroObserver();
+      if (!attached) {
+        // Hero might load dynamically client-side; poll until attached
+        pollInterval = setInterval(() => {
+          if (attachHeroObserver() && pollInterval) {
+            clearInterval(pollInterval);
+          }
+        }, 100);
       }
     } else {
       setIsOverHero(false);
@@ -58,6 +77,7 @@ export default function Header() {
     return () => {
       window.removeEventListener("scroll", handleScroll);
       if (observer) observer.disconnect();
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [pathname]);
 
@@ -67,12 +87,14 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 font-display ${
+      className={`fixed top-0 left-0 right-0 z-50 font-display transition-all duration-500 ease-in-out ${
         isOverHero
-          ? "bg-white/10 backdrop-blur-md border-b border-white/20 py-3.5 shadow-[0_4px_30px_rgba(0,0,0,0.1)]"
-          : isScrolled
-          ? "bg-white/60 backdrop-blur-md border-b border-[#E8E8E4]/80 py-3.5 shadow-sm"
-          : "bg-white/40 backdrop-blur-sm border-b border-[#E8E8E4]/50 py-4"
+          ? "-translate-y-full opacity-0 pointer-events-none"
+          : "translate-y-0 opacity-100 pointer-events-auto"
+      } ${
+        isScrolled
+          ? "bg-white/95 backdrop-blur-md border-b border-[#E8E8E4] py-3.5 shadow-sm"
+          : "bg-white/90 backdrop-blur-sm border-b border-[#E8E8E4]/80 py-4 shadow-xs"
       }`}
     >
       <div className="max-w-[1440px] mx-auto px-6 sm:px-12 lg:px-16">
@@ -84,13 +106,7 @@ export default function Header() {
             className="group flex items-center gap-3 focus:outline-none"
             aria-label="VISION STONES Home"
           >
-            <div
-              className={`w-8 h-8 rounded-[4px] flex items-center justify-center relative overflow-hidden transition-all duration-300 shadow-xs ${
-                isOverHero
-                  ? "bg-white/20 border border-white/30 group-hover:border-[#E52323] backdrop-blur-md"
-                  : "bg-white/80 border border-[#E8E8E4] group-hover:border-[#E52323]"
-              }`}
-            >
+            <div className="w-8 h-8 rounded-[4px] flex items-center justify-center relative overflow-hidden transition-all duration-300 shadow-xs bg-white/90 border border-[#E8E8E4] group-hover:border-[#E52323]">
               <img
                 src="/favicon.svg"
                 alt="Vision Stones Logo Emblem"
@@ -98,18 +114,10 @@ export default function Header() {
               />
             </div>
             <div className="flex flex-col min-w-0">
-              <span
-                className={`font-display font-black text-sm sm:text-lg tracking-[0.12em] sm:tracking-[0.18em] group-hover:text-[#E52323] transition-colors leading-tight truncate ${
-                  isOverHero ? "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]" : "text-[#111111]"
-                }`}
-              >
+              <span className="font-display font-black text-sm sm:text-lg tracking-[0.12em] sm:tracking-[0.18em] text-[#111111] group-hover:text-[#E52323] transition-colors leading-tight truncate">
                 VISION STONES
               </span>
-              <span
-                className={`text-[8px] sm:text-[9px] font-mono tracking-[0.12em] sm:tracking-[0.2em] uppercase -mt-0.5 truncate transition-colors ${
-                  isOverHero ? "text-white/80" : "text-[#666666]"
-                }`}
-              >
+              <span className="text-[8px] sm:text-[9px] font-mono tracking-[0.12em] sm:tracking-[0.2em] uppercase -mt-0.5 truncate text-[#666666] transition-colors">
                 NATURAL MINERALS &amp; SUPPLY
               </span>
             </div>
@@ -130,8 +138,6 @@ export default function Header() {
                   className={`text-xs uppercase tracking-widest font-bold transition-colors pb-1 relative ${
                     isActive
                       ? "text-[#E52323]"
-                      : isOverHero
-                      ? "text-white/90 hover:text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
                       : "text-[#444444] hover:text-[#111111]"
                   }`}
                 >
@@ -159,9 +165,7 @@ export default function Header() {
           <div className="flex lg:hidden items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`p-2 transition-colors focus:outline-none ${
-                isOverHero ? "text-white hover:text-[#E52323]" : "text-[#111111] hover:text-[#E52323]"
-              }`}
+              className="p-2 transition-colors focus:outline-none text-[#111111] hover:text-[#E52323]"
               aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -173,13 +177,7 @@ export default function Header() {
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div
-          className={`lg:hidden px-6 py-6 shadow-2xl space-y-4 max-h-[calc(100vh-4.5rem)] overflow-y-auto transition-all duration-300 ${
-            isOverHero
-              ? "bg-black/60 backdrop-blur-2xl border-b border-white/20 text-white"
-              : "bg-white/90 backdrop-blur-md border-b border-[#E8E8E4] text-[#111111]"
-          }`}
-        >
+        <div className="lg:hidden px-6 py-6 shadow-2xl space-y-4 max-h-[calc(100vh-4.5rem)] overflow-y-auto transition-all duration-300 bg-white/95 backdrop-blur-xl border-b border-[#E8E8E4] text-[#111111]">
           <nav className="flex flex-col space-y-2">
             {NAV_LINKS.map((link) => {
               const isActive =
@@ -192,13 +190,9 @@ export default function Header() {
                   key={link.name}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`text-sm uppercase tracking-wider font-bold py-2.5 transition-colors ${
-                    isOverHero ? "border-b border-white/15" : "border-b border-[#F5F5F2]"
-                  } ${
+                  className={`text-sm uppercase tracking-wider font-bold py-2.5 transition-colors border-b border-[#F5F5F2] ${
                     isActive
                       ? "text-[#E52323]"
-                      : isOverHero
-                      ? "text-white/90 hover:text-white"
                       : "text-[#333333] hover:text-[#111111]"
                   }`}
                 >
