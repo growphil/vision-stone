@@ -21,27 +21,43 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-
-      if (pathname === "/") {
-        const heroElement = document.getElementById("cinematic-hero");
-        if (heroElement) {
-          const rect = heroElement.getBoundingClientRect();
-          // Header is over hero if bottom of hero element is below top header height (~70px)
-          setIsOverHero(rect.bottom > 70);
-          return;
-        }
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setIsScrolled(window.scrollY > 20);
+          ticking = false;
+        });
+        ticking = true;
       }
-      setIsOverHero(false);
     };
 
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleScroll, { passive: true });
+
+    // Use IntersectionObserver instead of getBoundingClientRect() to avoid forced reflows during scroll
+    let observer: IntersectionObserver | null = null;
+    if (pathname === "/") {
+      const heroElement = document.getElementById("cinematic-hero");
+      if (heroElement) {
+        observer = new IntersectionObserver(
+          (entries) => {
+            const entry = entries[0];
+            setIsOverHero(entry.isIntersecting);
+          },
+          { rootMargin: "-70px 0px 0px 0px", threshold: 0 }
+        );
+        observer.observe(heroElement);
+      } else {
+        setIsOverHero(false);
+      }
+    } else {
+      setIsOverHero(false);
+    }
+
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
+      if (observer) observer.disconnect();
     };
   }, [pathname]);
 

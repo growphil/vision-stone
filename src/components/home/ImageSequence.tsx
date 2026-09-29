@@ -4,6 +4,8 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { ChevronDown, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
+import MobileHeroOverlay from "./MobileHeroOverlay";
+
 interface ImageSequenceProps {
   desktopFolderPath?: string;
   mobileFolderPath?: string;
@@ -114,12 +116,7 @@ const STAGES: Record<number, StageData> = {
 };
 
 /**
- * Single source of truth: frame index -> stage mapping
- * Proportional mapping across any frame count (default: 240 frames)
- * frames 1–50   (progress < 50/240)   -> STAGE 1
- * frames 51–110 (progress < 110/240)  -> STAGE 2
- * frames 111–206 (progress < 206/240) -> STAGE 3
- * frames 207–240 (progress >= 206/240)-> STAGE 4
+ * Proportional stage calculation
  */
 function getStageFromFrame(frameIndex: number, totalFrames: number = 240): number {
   const progress = frameIndex / Math.max(1, totalFrames - 1);
@@ -132,7 +129,7 @@ function getStageFromFrame(frameIndex: number, totalFrames: number = 240): numbe
 export default function ImageSequence({
   desktopFolderPath = "/dolomite -powder 2",
   mobileFolderPath = "/mobile hero",
-  desktopTotalFrames = 240,
+  desktopTotalFrames = 192,
   mobileTotalFrames = 240,
   totalFrames: legacyTotalFrames,
   folderPath: legacyFolderPath,
@@ -159,20 +156,28 @@ export default function ImageSequence({
 
   const [initialReady, setInitialReady] = useState<boolean>(false);
   const [activeStage, setActiveStage] = useState<number>(1);
+  const [scrollProgress, setScrollProgress] = useState<number>(0);
   const [showScrollPrompt, setShowScrollPrompt] = useState<boolean>(true);
 
   // Images cache & active frame index
   const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
   const currentFrameIndexRef = useRef<number>(0);
 
-  // Safe Frame URL formatter (e.g. 1 -> "/mobile%20hero/ezgif-frame-001.jpg" or "/dolomite%20-powder%202/ezgif-frame-001.jpg")
+  // Safe Frame URL formatter
   const getFrameUrl = useCallback((index: number, folder: string) => {
-    const paddedIndex = String(index).padStart(3, "0");
     const safeFolder = encodeURI(folder);
-    return `${safeFolder}/ezgif-frame-${paddedIndex}.jpg`;
+    if (folder.includes("mobile")) {
+      const paddedIndex = String(index).padStart(3, "0");
+      return `${safeFolder}/frame_${paddedIndex}.jpg`;
+    }
+    const paddedIndex = String(index).padStart(4, "0");
+    return `${safeFolder}/frame-${paddedIndex}.jpg`;
   }, []);
 
-  // Exact Canvas Draw Function with COVER math and subtle vignette
+  // Cache for the last successfully rendered image to provide instant O(1) fallback
+  const lastRenderedImgRef = useRef<HTMLImageElement | null>(null);
+
+  // Exact Canvas Draw Function with COVER math
   const renderFrame = useCallback(
     (frameIndex: number) => {
       const canvas = canvasRef.current;
@@ -182,23 +187,14 @@ export default function ImageSequence({
 
       let img = imagesRef.current[frameIndex];
 
-      // Fallback to nearest available loaded frame
+      // Fast O(1) fallback: if target frame isn't ready yet, use the last rendered image
       if (!img || !img.complete || img.naturalWidth === 0) {
-        for (let offset = 1; offset < activeTotalFrames; offset++) {
-          const prev = imagesRef.current[frameIndex - offset];
-          if (prev && prev.complete && prev.naturalWidth > 0) {
-            img = prev;
-            break;
-          }
-          const next = imagesRef.current[frameIndex + offset];
-          if (next && next.complete && next.naturalWidth > 0) {
-            img = next;
-            break;
-          }
-        }
+        img = lastRenderedImgRef.current;
       }
 
       if (!img || !img.complete || img.naturalWidth === 0) return;
+
+      lastRenderedImgRef.current = img;
 
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
@@ -223,24 +219,8 @@ export default function ImageSequence({
 
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-
-      // Subtle editorial vignette (adjusted for mobile portrait vs desktop landscape)
-      const edgeGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-      if (isMobile) {
-        edgeGradient.addColorStop(0, "rgba(0, 0, 0, 0.45)");
-        edgeGradient.addColorStop(0.2, "rgba(0, 0, 0, 0.10)");
-        edgeGradient.addColorStop(0.55, "rgba(0, 0, 0, 0.25)");
-        edgeGradient.addColorStop(1, "rgba(0, 0, 0, 0.82)");
-      } else {
-        edgeGradient.addColorStop(0, "rgba(0, 0, 0, 0.45)");
-        edgeGradient.addColorStop(0.2, "rgba(0, 0, 0, 0.15)");
-        edgeGradient.addColorStop(0.6, "rgba(0, 0, 0, 0.20)");
-        edgeGradient.addColorStop(1, "rgba(0, 0, 0, 0.70)");
-      }
-      ctx.fillStyle = edgeGradient;
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     },
-    [activeTotalFrames, isMobile]
+    []
   );
 
   // Handle high-DPI canvas resizing
@@ -283,7 +263,7 @@ export default function ImageSequence({
     };
   }, [resizeCanvas]);
 
-  // Frame Preloading Engine (Strictly loads only the active sequence)
+  // Frame Preloading Engine (Strictly loads only the active sequence with async decode)
   useEffect(() => {
     imagesRef.current = new Array(activeTotalFrames).fill(null);
     let isCancelled = false;
@@ -300,14 +280,23 @@ export default function ImageSequence({
     // Load Frame 1 immediately
     const firstImg = new Image();
     firstImg.src = getFrameUrl(1, activeFolder);
-    firstImg.onload = () => {
+
+    const onFirstImageReady = () => {
       if (isCancelled) return;
       imagesRef.current[0] = firstImg;
+      lastRenderedImgRef.current = firstImg;
       setInitialReady(true);
       resizeCanvas();
       renderFrame(0);
-
       startProgressiveLoading();
+    };
+
+    firstImg.onload = () => {
+      if (typeof firstImg.decode === "function") {
+        firstImg.decode().then(onFirstImageReady).catch(onFirstImageReady);
+      } else {
+        onFirstImageReady();
+      }
     };
 
     firstImg.onerror = () => {
@@ -316,6 +305,7 @@ export default function ImageSequence({
       productFallback.onload = () => {
         if (isCancelled) return;
         imagesRef.current[0] = productFallback;
+        lastRenderedImgRef.current = productFallback;
         setInitialReady(true);
         resizeCanvas();
         renderFrame(0);
@@ -338,6 +328,8 @@ export default function ImageSequence({
       }
 
       const queue = [...priorityFrames, ...remainingFrames];
+      // On mobile, use 3 concurrent streams to avoid main thread & memory bus saturation; desktop uses 6
+      const concurrency = isMobile ? 3 : 6;
 
       const loadNext = (index: number) => {
         if (isCancelled || index >= queue.length) return;
@@ -345,7 +337,7 @@ export default function ImageSequence({
         const img = new Image();
         img.src = getFrameUrl(frameNum, activeFolder);
 
-        img.onload = () => {
+        const handleImageReady = () => {
           if (isCancelled) return;
           imagesRef.current[frameNum - 1] = img;
 
@@ -353,15 +345,23 @@ export default function ImageSequence({
             renderFrame(frameNum - 1);
           }
 
-          loadNext(index + 6);
+          loadNext(index + concurrency);
+        };
+
+        img.onload = () => {
+          if (typeof img.decode === "function") {
+            img.decode().then(handleImageReady).catch(handleImageReady);
+          } else {
+            handleImageReady();
+          }
         };
 
         img.onerror = () => {
-          loadNext(index + 6);
+          loadNext(index + concurrency);
         };
       };
 
-      for (let stream = 0; stream < 6; stream++) {
+      for (let stream = 0; stream < concurrency; stream++) {
         loadNext(stream);
       }
     };
@@ -370,7 +370,7 @@ export default function ImageSequence({
       isCancelled = true;
       clearTimeout(safetyTimer);
     };
-  }, [activeFolder, activeTotalFrames, getFrameUrl, renderFrame, resizeCanvas]);
+  }, [activeFolder, activeTotalFrames, getFrameUrl, isMobile, renderFrame, resizeCanvas]);
 
   // GSAP ScrollTrigger Pinned Cinematic Sequence
   useEffect(() => {
@@ -389,16 +389,19 @@ export default function ImageSequence({
 
         const scrollDistance = isMobile ? "+=4500" : "+=6000";
 
+        // Touch devices: scrub: true for instant 1:1 finger tracking without lag.
+        // Desktop mouse wheel: scrub: 0.2 for smooth interpolation.
         triggerInstance = ScrollTrigger.create({
           trigger: container,
           start: "top top",
           end: scrollDistance,
           pin: true,
           pinSpacing: true,
-          scrub: 0.2,
+          scrub: isMobile ? true : 0.2,
           anticipatePin: 1,
           onUpdate: (self) => {
             const progress = self.progress;
+            setScrollProgress(progress);
 
             // Compute frame from scroll (0 to activeTotalFrames - 1)
             const targetFrame = Math.min(
@@ -407,11 +410,8 @@ export default function ImageSequence({
             );
 
             // Hide initial scroll prompt after user moves past first 6 frames
-            if (targetFrame > 6) {
-              setShowScrollPrompt(false);
-            } else {
-              setShowScrollPrompt(true);
-            }
+            const shouldShowPrompt = targetFrame <= 6;
+            setShowScrollPrompt((prev) => (prev !== shouldShowPrompt ? shouldShowPrompt : prev));
 
             // Render canvas frame
             if (targetFrame !== currentFrameIndexRef.current) {
@@ -440,7 +440,7 @@ export default function ImageSequence({
     };
   }, [activeTotalFrames, initialReady, isMobile, renderFrame]);
 
-  // Active Stage Content Definition
+  // Active Stage Content Definition (Desktop)
   const currentStage = STAGES[activeStage] || STAGES[1];
 
   return (
@@ -451,92 +451,109 @@ export default function ImageSequence({
       style={{ minHeight: "100vh" }}
       aria-label="Vision Stones Dolomite mineral transformation cinematic sequence"
     >
-      {/* FULLSCREEN CANVAS (z-0) */}
+      {/* LAYER 1: FULLSCREEN CANVAS (z-0) */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full object-cover z-0"
         aria-label="Cinematic scroll-driven Dolomite mineral transformation"
       />
 
+      {/* HARDWARE-ACCELERATED VIGNETTE OVERLAY (z-10, Desktop only) */}
+      {!isMobile && (
+        <div
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 20%, rgba(0, 0, 0, 0.20) 60%, rgba(0, 0, 0, 0.70) 100%)",
+          }}
+        />
+      )}
+
       {/* TOP BRAND INDICATOR (z-30) */}
       <div className="absolute top-20 sm:top-24 left-4 sm:left-12 lg:left-16 z-30 pointer-events-none">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="w-1.5 h-1.5 rounded-full bg-[#E52323] animate-pulse shrink-0" />
-          <span className="text-[9px] xs:text-[10px] sm:text-xs font-display uppercase tracking-[0.16em] sm:tracking-[0.22em] text-white/90 font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+          <span className="text-[11px] sm:text-xs font-display uppercase tracking-[0.12em] sm:tracking-[0.22em] text-white/90 font-bold drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
             VISION STONES <span className="text-white/40">/</span> MINERAL TRANSFORMATION
           </span>
         </div>
       </div>
 
       {/* ========================================================
-          SINGLE ACTIVE STAGE CONTENT CONTAINER (z-20)
-          Zero text overlap. Only one stage is ever rendered in the DOM.
-          Positioned as ONE unified editorial block.
+          MOBILE CINEMATIC 3D OVERLAY (Mobile Viewport ONLY)
+          Layers 2, 3, 4, 5 (Atmosphere, 3D Minerals, Particles, Typography)
           ======================================================== */}
-      <div
-        className="hero-content absolute left-4 sm:left-12 lg:left-16 bottom-6 sm:bottom-14 lg:bottom-24 w-[calc(100%-2rem)] sm:max-w-xl lg:max-w-2xl xl:max-w-3xl z-20 pointer-events-none"
-      >
+      {isMobile ? (
+        <MobileHeroOverlay progress={scrollProgress} />
+      ) : (
+        /* ========================================================
+            DESKTOP STAGE CONTENT CONTAINER (Desktop Viewport ONLY)
+            100% UNCHANGED and Preserved
+            ======================================================== */
         <div
-          key={`stage-${activeStage}`}
-          className="cinematic-stage-content animate-stage-fade text-left"
+          className="hero-content absolute left-4 sm:left-12 lg:left-16 bottom-6 sm:bottom-14 lg:bottom-24 w-[calc(100%-2rem)] sm:max-w-xl lg:max-w-2xl xl:max-w-3xl z-20 pointer-events-none"
         >
-          {/* STAGE LABEL */}
-          <div className="flex items-center gap-2 sm:gap-2.5 text-[10px] xs:text-xs sm:text-xs font-display font-bold uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#E52323] mb-2 sm:mb-5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-            <span className="text-white/70">STAGE {currentStage.step}</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
-            <span>{currentStage.theme}</span>
-          </div>
-
-          {/* MAIN HEADLINE (Responsive typography & line breaks for Desktop vs Mobile) */}
-          <h1 className="hero-title font-display font-black text-2xl xs:text-3xl sm:text-5xl lg:text-[72px] xl:text-[80px] text-white uppercase tracking-tighter leading-[1.02] sm:leading-[0.92] mb-2.5 sm:mb-6 drop-shadow-[0_6px_30px_rgba(0,0,0,0.95)]">
-            <span className="hidden sm:inline">{currentStage.desktopTitle}</span>
-            <span className="inline sm:hidden">{currentStage.mobileTitle}</span>
-          </h1>
-
-          {/* DESCRIPTION */}
-          <p className="hero-description text-xs xs:text-sm sm:text-base lg:text-lg text-white/90 font-display font-normal max-w-xs sm:max-w-xl leading-relaxed mb-3 sm:mb-7 drop-shadow-[0_3px_12px_rgba(0,0,0,0.9)]">
-            {currentStage.supporting}
-          </p>
-
-          {/* STAGE 4 EXCLUSIVE CTAS (ONLY ON FINISHED PRODUCT) */}
-          {currentStage.hasCta && (
-            <div className="hero-cta pointer-events-auto space-y-2.5 sm:space-y-4 pt-1">
-              {/* Trust Tag */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-5 text-[9px] xs:text-[10px] sm:text-xs font-display uppercase tracking-widest text-white/85 font-bold border-t border-white/20 pt-2.5 sm:pt-4">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
-                  <span>MANUFACTURING ROOTS SINCE 1997</span>
-                </div>
-                <span className="text-white/30 hidden sm:inline">•</span>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <span className="text-[#E52323] font-black">450+</span>
-                  <span>CLIENTS</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 pt-0.5">
-                <Link
-                  href="#products"
-                  className="inline-flex items-center gap-1.5 text-[11px] sm:text-sm font-display font-bold uppercase tracking-widest text-white hover:text-[#E52323] transition-colors py-1.5 cursor-pointer group"
-                >
-                  <span className="border-b-2 border-white group-hover:border-[#E52323] pb-0.5 transition-colors">
-                    VIEW PRODUCTS →
-                  </span>
-                </Link>
-
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center gap-1.5 bg-[#E52323] text-white hover:bg-[#C91A1A] text-[11px] sm:text-sm font-display font-bold uppercase tracking-wider px-3.5 sm:px-5 py-2 sm:py-2.5 transition-all shadow-lg hover:shadow-[#E52323]/25"
-                >
-                  <span>REQUEST A QUOTE</span>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </div>
+          <div
+            key={`stage-${activeStage}`}
+            className="cinematic-stage-content animate-stage-fade text-left"
+          >
+            {/* STAGE LABEL */}
+            <div className="flex items-center gap-2 sm:gap-2.5 text-[10px] xs:text-xs sm:text-xs font-display font-bold uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#E52323] mb-2 sm:mb-5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+              <span className="text-white/70">STAGE {currentStage.step}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
+              <span>{currentStage.theme}</span>
             </div>
-          )}
+
+            {/* MAIN HEADLINE */}
+            <h1 className="hero-title font-display font-black text-2xl xs:text-3xl sm:text-5xl lg:text-[72px] xl:text-[80px] text-white uppercase tracking-tighter leading-[1.02] sm:leading-[0.92] mb-2.5 sm:mb-6 drop-shadow-[0_6px_30px_rgba(0,0,0,0.95)]">
+              {currentStage.desktopTitle}
+            </h1>
+
+            {/* DESCRIPTION */}
+            <p className="hero-description text-xs xs:text-sm sm:text-base lg:text-lg text-white/90 font-display font-normal max-w-xs sm:max-w-xl leading-relaxed mb-3 sm:mb-7 drop-shadow-[0_3px_12px_rgba(0,0,0,0.9)]">
+              {currentStage.supporting}
+            </p>
+
+            {/* STAGE 4 EXCLUSIVE CTAS (ONLY ON FINISHED PRODUCT) */}
+            {currentStage.hasCta && (
+              <div className="hero-cta pointer-events-auto space-y-2.5 sm:space-y-4 pt-1">
+                {/* Trust Tag */}
+                <div className="flex flex-wrap items-center gap-2 sm:gap-5 text-[9px] xs:text-[10px] sm:text-xs font-display uppercase tracking-widest text-white/85 font-bold border-t border-white/20 pt-2.5 sm:pt-4">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
+                    <span>MANUFACTURING ROOTS SINCE 1997</span>
+                  </div>
+                  <span className="text-white/30 hidden sm:inline">•</span>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="text-[#E52323] font-black">450+</span>
+                    <span>CLIENTS</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 pt-0.5">
+                  <Link
+                    href="#products"
+                    className="inline-flex items-center gap-1.5 text-[11px] sm:text-sm font-display font-bold uppercase tracking-widest text-white hover:text-[#E52323] transition-colors py-1.5 cursor-pointer group"
+                  >
+                    <span className="border-b-2 border-white group-hover:border-[#E52323] pb-0.5 transition-colors">
+                      VIEW PRODUCTS →
+                    </span>
+                  </Link>
+
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center gap-1.5 bg-[#E52323] text-white hover:bg-[#C91A1A] text-[11px] sm:text-sm font-display font-bold uppercase tracking-wider px-3.5 sm:px-5 py-2 sm:py-2.5 transition-all shadow-lg hover:shadow-[#E52323]/25"
+                  >
+                    <span>REQUEST A QUOTE</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* OPENING SCROLL PROMPT (Fades out immediately when scrolling begins) */}
       <div

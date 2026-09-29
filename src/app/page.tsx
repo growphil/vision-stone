@@ -34,7 +34,7 @@ export default function HomePage() {
       <ImageSequence
         desktopFolderPath="/dolomite -powder 2"
         mobileFolderPath="/mobile hero"
-        desktopTotalFrames={240}
+        desktopTotalFrames={192}
         mobileTotalFrames={240}
       />
 
