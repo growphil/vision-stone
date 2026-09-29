@@ -35,7 +35,7 @@ export default function HomePage() {
         desktopFolderPath="/dolomite -powder 2"
         mobileFolderPath="/mobile hero"
         desktopTotalFrames={192}
-        mobileTotalFrames={240}
+        mobileTotalFrames={120}
       />
 
       {/* 02: PRODUCT UNIVERSE */}

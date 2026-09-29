@@ -118,11 +118,11 @@ const STAGES: Record<number, StageData> = {
 /**
  * Proportional stage calculation
  */
-function getStageFromFrame(frameIndex: number, totalFrames: number = 240): number {
+function getStageFromFrame(frameIndex: number, totalFrames: number = 120): number {
   const progress = frameIndex / Math.max(1, totalFrames - 1);
-  if (progress < 50 / 240) return 1;
-  if (progress < 110 / 240) return 2;
-  if (progress < 206 / 240) return 3;
+  if (progress < 0.21) return 1;
+  if (progress < 0.46) return 2;
+  if (progress < 0.86) return 3;
   return 4;
 }
 
@@ -130,7 +130,7 @@ export default function ImageSequence({
   desktopFolderPath = "/dolomite -powder 2",
   mobileFolderPath = "/mobile hero",
   desktopTotalFrames = 192,
-  mobileTotalFrames = 240,
+  mobileTotalFrames = 120,
   totalFrames: legacyTotalFrames,
   folderPath: legacyFolderPath,
 }: ImageSequenceProps) {
@@ -223,12 +223,14 @@ export default function ImageSequence({
     []
   );
 
-  // Handle high-DPI canvas resizing
+  // Handle high-DPI canvas resizing with mobile DPR capped at 1.5
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Mobile DPR capped at 1.5 to reduce memory & GPU fill-rate pressure; desktop retains 2.0
+    const maxDpr = isMobile ? 1.5 : 2;
+    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
     const width = window.innerWidth;
     const height = window.innerHeight;
 
@@ -244,7 +246,7 @@ export default function ImageSequence({
     }
 
     renderFrame(currentFrameIndexRef.current);
-  }, [renderFrame]);
+  }, [isMobile, renderFrame]);
 
   // Window resize & breakpoint detection
   useEffect(() => {
@@ -262,6 +264,41 @@ export default function ImageSequence({
       window.removeEventListener("orientationchange", handleResize);
     };
   }, [resizeCanvas]);
+
+  // On-demand priority frame requester for fast scrolling / jumps
+  const requestFrameLoad = useCallback(
+    (frameIndex: number) => {
+      if (frameIndex < 0 || frameIndex >= activeTotalFrames) return;
+      if (imagesRef.current[frameIndex]) return;
+
+      const img = new Image();
+      img.src = getFrameUrl(frameIndex + 1, activeFolder);
+      img.onload = () => {
+        if (typeof img.decode === "function") {
+          img
+            .decode()
+            .then(() => {
+              imagesRef.current[frameIndex] = img;
+              if (currentFrameIndexRef.current === frameIndex) {
+                renderFrame(frameIndex);
+              }
+            })
+            .catch(() => {
+              imagesRef.current[frameIndex] = img;
+              if (currentFrameIndexRef.current === frameIndex) {
+                renderFrame(frameIndex);
+              }
+            });
+        } else {
+          imagesRef.current[frameIndex] = img;
+          if (currentFrameIndexRef.current === frameIndex) {
+            renderFrame(frameIndex);
+          }
+        }
+      };
+    },
+    [activeFolder, activeTotalFrames, getFrameUrl, renderFrame]
+  );
 
   // Frame Preloading Engine (Strictly loads only the active sequence with async decode)
   useEffect(() => {
@@ -315,12 +352,37 @@ export default function ImageSequence({
       };
     };
 
+    // Preload the final frame early in background to ensure 100% completion readiness
+    const finalImg = new Image();
+    finalImg.src = getFrameUrl(activeTotalFrames, activeFolder);
+    finalImg.onload = () => {
+      if (isCancelled) return;
+      if (typeof finalImg.decode === "function") {
+        finalImg
+          .decode()
+          .then(() => {
+            if (!isCancelled) imagesRef.current[activeTotalFrames - 1] = finalImg;
+          })
+          .catch(() => {
+            if (!isCancelled) imagesRef.current[activeTotalFrames - 1] = finalImg;
+          });
+      } else {
+        imagesRef.current[activeTotalFrames - 1] = finalImg;
+      }
+    };
+
     const startProgressiveLoading = () => {
       const priorityFrames: number[] = [];
       const remainingFrames: number[] = [];
 
-      for (let i = 2; i <= activeTotalFrames; i++) {
-        if (i % 3 === 0) {
+      // Immediate early frames
+      for (let i = 2; i <= Math.min(6, activeTotalFrames); i++) {
+        priorityFrames.push(i);
+      }
+
+      // Keyframes distributed throughout sequence
+      for (let i = 7; i <= activeTotalFrames; i++) {
+        if (i % (isMobile ? 2 : 3) === 0) {
           priorityFrames.push(i);
         } else {
           remainingFrames.push(i);
@@ -387,7 +449,10 @@ export default function ImageSequence({
         const container = containerRef.current;
         if (!container) return;
 
-        const scrollDistance = isMobile ? "+=4500" : "+=6000";
+        // Mobile target: ~3 viewport heights (window.innerHeight * 3). Desktop: "+=6000".
+        const scrollDistance = isMobile
+          ? () => `+=${Math.round(window.innerHeight * 3)}`
+          : "+=6000";
 
         // Touch devices: scrub: true for instant 1:1 finger tracking without lag.
         // Desktop mouse wheel: scrub: 0.2 for smooth interpolation.
@@ -399,6 +464,7 @@ export default function ImageSequence({
           pinSpacing: true,
           scrub: isMobile ? true : 0.2,
           anticipatePin: 1,
+          invalidateOnRefresh: true,
           onUpdate: (self) => {
             const progress = self.progress;
             setScrollProgress(progress);
@@ -408,6 +474,11 @@ export default function ImageSequence({
               activeTotalFrames - 1,
               Math.max(0, Math.round(progress * (activeTotalFrames - 1)))
             );
+
+            // On-demand load if user scrolled past non-loaded frame
+            if (!imagesRef.current[targetFrame]) {
+              requestFrameLoad(targetFrame);
+            }
 
             // Hide initial scroll prompt after user moves past first 6 frames
             const shouldShowPrompt = targetFrame <= 6;
@@ -438,7 +509,7 @@ export default function ImageSequence({
         triggerInstance.kill();
       }
     };
-  }, [activeTotalFrames, initialReady, isMobile, renderFrame]);
+  }, [activeTotalFrames, initialReady, isMobile, renderFrame, requestFrameLoad]);
 
   // Active Stage Content Definition (Desktop)
   const currentStage = STAGES[activeStage] || STAGES[1];

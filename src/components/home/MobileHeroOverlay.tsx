@@ -40,9 +40,6 @@ export default function MobileHeroOverlay({ progress }: MobileHeroOverlayProps) 
   // Zone E refs (Final Product + CTAs)
   const zoneEFinalRef = useRef<HTMLDivElement>(null);
 
-  // Floating abstract particles
-  const particleLayerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     // Clamped linear interpolation helper
     const lerp = (p: number, inMin: number, inMax: number, outMin: number, outMax: number) => {
@@ -421,12 +418,6 @@ export default function MobileHeroOverlay({ progress }: MobileHeroOverlayProps) 
       zoneEFinalRef.current.style.transform = `translate3d(0, ${y}px, 0) scale(${scale})`;
       zoneEFinalRef.current.style.visibility = opacity > 0.01 ? "visible" : "hidden";
     }
-
-    // Abstract particles drift
-    if (particleLayerRef.current) {
-      const y = lerp(progress, 0, 1, 0, -70);
-      particleLayerRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
-    }
   }, [progress]);
 
   return (
@@ -446,19 +437,6 @@ export default function MobileHeroOverlay({ progress }: MobileHeroOverlayProps) 
             "linear-gradient(to top, rgba(7,7,9,0.72) 0%, rgba(7,7,9,0.30) 55%, rgba(7,7,9,0) 100%)",
         }}
       />
-
-      {/* ========================================================
-          ABSTRACT FLOATING CRYSTALLINE DUST & PARTICLES
-          ======================================================== */}
-      <div
-        ref={particleLayerRef}
-        className="absolute inset-0 pointer-events-none z-5 will-change-transform"
-      >
-        <span className="absolute right-[12%] top-[22%] w-1.5 h-1.5 rotate-45 border border-white/50 bg-white/20 shadow-[0_0_6px_rgba(255,255,255,0.7)]" />
-        <span className="absolute right-[25%] top-[40%] w-1 h-1 rotate-45 border border-white/40 bg-white/15 shadow-[0_0_4px_rgba(255,255,255,0.5)]" />
-        <span className="absolute right-[8%] top-[58%] w-2 h-2 rotate-45 border border-[#E52323]/60 bg-[#E52323]/30 shadow-[0_0_6px_rgba(229,35,35,0.7)]" />
-        <span className="absolute right-[20%] top-[70%] w-1 h-1 rounded-full bg-white/50 shadow-[0_0_4px_rgba(255,255,255,0.5)]" />
-      </div>
 
       {/* ========================================================
           PHASE 01 / ZONE A: HUGE EDITORIAL "FROM THE EARTH" [0.07 - 0.26]
