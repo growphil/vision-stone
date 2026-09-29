@@ -480,8 +480,8 @@ export default function ImageSequence({
               requestFrameLoad(targetFrame);
             }
 
-            // Hide initial scroll prompt after user moves past first 6 frames
-            const shouldShowPrompt = targetFrame <= 6;
+            // Hide initial scroll prompt as soon as user begins scrolling (first 2 frames)
+            const shouldShowPrompt = targetFrame <= 2;
             setShowScrollPrompt((prev) => (prev !== shouldShowPrompt ? shouldShowPrompt : prev));
 
             // Render canvas frame
@@ -626,14 +626,16 @@ export default function ImageSequence({
         </div>
       )}
 
-      {/* OPENING SCROLL PROMPT (Fades out immediately when scrolling begins) */}
+      {/* OPENING SCROLL PROMPT (Minimalist Mouse Icon Only, center on mobile, bottom on desktop) */}
       <div
-        className={`absolute right-4 sm:right-12 lg:right-16 bottom-4 sm:bottom-20 z-20 flex items-center gap-1.5 sm:gap-2 text-white/80 animate-bounce text-[10px] sm:text-xs font-display font-bold tracking-widest uppercase transition-opacity duration-300 pointer-events-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] ${
-          showScrollPrompt ? "opacity-100" : "opacity-0 pointer-events-none"
+        className={`absolute left-1/2 -translate-x-1/2 top-[44%] -translate-y-1/2 md:top-auto md:bottom-8 md:translate-y-0 z-30 flex items-center justify-center transition-all duration-400 pointer-events-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] ${
+          showScrollPrompt ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
         }`}
       >
-        <span>Scroll to Transform</span>
-        <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E52323]" />
+        {/* Mild White Blinking Mouse Icon Only (No background) */}
+        <div className="w-6 h-10 sm:w-7 sm:h-11 rounded-full border-2 border-white/85 flex items-start justify-center p-1.5 shadow-[0_0_20px_rgba(255,255,255,0.35)] animate-pulse">
+          <div className="w-1.5 h-2.5 bg-white rounded-full animate-bounce shadow-[0_0_8px_rgba(255,255,255,0.9)]" />
+        </div>
       </div>
 
       {/* Loading Overlay */}

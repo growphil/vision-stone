@@ -11,34 +11,28 @@ interface MobileHeroOverlayProps {
 export default function MobileHeroOverlay({ progress }: MobileHeroOverlayProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Zone A refs ("FROM THE EARTH")
-  const zoneATopRightRef = useRef<HTMLDivElement>(null);
-  const zoneALine1Ref = useRef<HTMLSpanElement>(null);
-  const zoneALine2Ref = useRef<HTMLSpanElement>(null);
-  const zoneADescRef = useRef<HTMLParagraphElement>(null);
-
-  // Zone B refs ("RAW MATERIAL")
-  const zoneBMiddleRef = useRef<HTMLDivElement>(null);
-  const zoneBLine1Ref = useRef<HTMLSpanElement>(null);
-  const zoneBLine2Ref = useRef<HTMLSpanElement>(null);
-  const zoneBDescRef = useRef<HTMLParagraphElement>(null);
-
-  // Zone C (Main Hero) refs ("MINERAL. BUILT FROM THE EARTH.")
-  const zoneCLowerLeftRef = useRef<HTMLDivElement>(null);
+  // Phase 01: Initial Title before scroll ("MINERAL. BUILT FROM THE EARTH.") - BOTTOM
+  const stage1Ref = useRef<HTMLDivElement>(null);
   const line1Ref = useRef<HTMLSpanElement>(null);
   const line2Ref = useRef<HTMLSpanElement>(null);
   const line3Ref = useRef<HTMLSpanElement>(null);
   const lineDescRef = useRef<HTMLParagraphElement>(null);
 
-  // Zone D refs ("ENGINEERED THROUGH PRECISION.")
-  const zoneDMiddleRef = useRef<HTMLDivElement>(null);
-  const zoneDLine1Ref = useRef<HTMLSpanElement>(null);
-  const zoneDLine2Ref = useRef<HTMLSpanElement>(null);
-  const zoneDLine3Ref = useRef<HTMLSpanElement>(null);
-  const zoneDDescRef = useRef<HTMLParagraphElement>(null);
+  // Phase 02: ("RAW MATERIAL") - CENTER
+  const stage2Ref = useRef<HTMLDivElement>(null);
+  const stage2Line1Ref = useRef<HTMLSpanElement>(null);
+  const stage2Line2Ref = useRef<HTMLSpanElement>(null);
+  const stage2DescRef = useRef<HTMLParagraphElement>(null);
 
-  // Zone E refs (Final Product + CTAs)
-  const zoneEFinalRef = useRef<HTMLDivElement>(null);
+  // Phase 03: ("ENGINEERED THROUGH PRECISION.") - BOTTOM
+  const stage3Ref = useRef<HTMLDivElement>(null);
+  const stage3Line1Ref = useRef<HTMLSpanElement>(null);
+  const stage3Line2Ref = useRef<HTMLSpanElement>(null);
+  const stage3Line3Ref = useRef<HTMLSpanElement>(null);
+  const stage3DescRef = useRef<HTMLParagraphElement>(null);
+
+  // Phase 04: (Final Product + CTAs) - BOTTOM
+  const stage4Ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Clamped linear interpolation helper
@@ -49,374 +43,115 @@ export default function MobileHeroOverlay({ progress }: MobileHeroOverlayProps) 
     };
 
     // ========================================================
-    // PHASE 01 / ZONE A: HUGE EDITORIAL "FROM THE EARTH" [0.07 - 0.26]
+    // PHASE 01: INITIAL TITLE AT BOTTOM (Visible BEFORE scroll [0.00 - 0.23])
+    // "MINERAL. BUILT FROM THE EARTH."
     // ========================================================
-    if (zoneATopRightRef.current) {
-      const isVisible = progress >= 0.06 && progress <= 0.27;
-      zoneATopRightRef.current.style.visibility = isVisible ? "visible" : "hidden";
+    if (stage1Ref.current) {
+      const isVisible = progress <= 0.23;
+      stage1Ref.current.style.visibility = isVisible ? "visible" : "hidden";
+
+      let opacity = 1;
+      let y = 0;
+      let scale = 1;
+
+      if (progress <= 0.14) {
+        opacity = 1;
+        y = 0;
+        scale = 1;
+      } else if (progress > 0.14 && progress <= 0.23) {
+        opacity = lerp(progress, 0.14, 0.23, 1, 0);
+        y = lerp(progress, 0.14, 0.23, 0, -25);
+        scale = lerp(progress, 0.14, 0.23, 1, 0.98);
+      } else {
+        opacity = 0;
+      }
+
+      stage1Ref.current.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+      stage1Ref.current.style.transform = `translate3d(0, ${y}px, 0) scale(${scale})`;
+    }
+
+    // ========================================================
+    // PHASE 02: STAGE 02 IN CENTER OF SCREEN [0.22 - 0.48]
+    // "RAW MATERIAL."
+    // ========================================================
+    if (stage2Ref.current) {
+      const isVisible = progress >= 0.21 && progress <= 0.49;
+      stage2Ref.current.style.visibility = isVisible ? "visible" : "hidden";
 
       let opacity = 0;
-      let x = 30;
       let y = 25;
       let scale = 0.96;
 
-      if (progress >= 0.07 && progress <= 0.16) {
-        opacity = lerp(progress, 0.07, 0.16, 0, 1);
-        x = lerp(progress, 0.07, 0.16, 30, 0);
-        y = lerp(progress, 0.07, 0.16, 25, 0);
-        scale = lerp(progress, 0.07, 0.16, 0.96, 1);
-      } else if (progress > 0.16 && progress < 0.21) {
+      if (progress >= 0.22 && progress <= 0.30) {
+        opacity = lerp(progress, 0.22, 0.30, 0, 1);
+        y = lerp(progress, 0.22, 0.30, 25, 0);
+        scale = lerp(progress, 0.22, 0.30, 0.96, 1);
+      } else if (progress > 0.30 && progress < 0.40) {
         opacity = 1;
-        x = 0;
         y = 0;
         scale = 1;
-      } else if (progress >= 0.21 && progress <= 0.26) {
-        opacity = lerp(progress, 0.21, 0.26, 1, 0);
-        x = lerp(progress, 0.21, 0.26, 0, -20);
-        y = lerp(progress, 0.21, 0.26, 0, -10);
-        scale = lerp(progress, 0.21, 0.26, 1, 0.98);
-      }
-      zoneATopRightRef.current.style.opacity = String(Math.max(0, Math.min(1, opacity)));
-      zoneATopRightRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
-
-      // Line 1: "FROM THE"
-      if (zoneALine1Ref.current) {
-        let op = 0;
-        let lineY = 25;
-        if (progress >= 0.07 && progress <= 0.14) {
-          op = lerp(progress, 0.07, 0.14, 0, 1);
-          lineY = lerp(progress, 0.07, 0.14, 25, 0);
-        } else if (progress > 0.14 && progress < 0.21) {
-          op = 1;
-          lineY = 0;
-        } else if (progress >= 0.21 && progress <= 0.26) {
-          op = lerp(progress, 0.21, 0.26, 1, 0);
-          lineY = lerp(progress, 0.21, 0.26, 0, -15);
-        }
-        zoneALine1Ref.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        zoneALine1Ref.current.style.transform = `translate3d(0, ${lineY}px, 0)`;
+      } else if (progress >= 0.40 && progress <= 0.48) {
+        opacity = lerp(progress, 0.40, 0.48, 1, 0);
+        y = lerp(progress, 0.40, 0.48, 0, -25);
+        scale = lerp(progress, 0.40, 0.48, 1, 0.98);
       }
 
-      // Line 2: "EARTH"
-      if (zoneALine2Ref.current) {
-        let op = 0;
-        let lineY = 35;
-        if (progress >= 0.10 && progress <= 0.17) {
-          op = lerp(progress, 0.10, 0.17, 0, 1);
-          lineY = lerp(progress, 0.10, 0.17, 35, 0);
-        } else if (progress > 0.17 && progress < 0.21) {
-          op = 1;
-          lineY = 0;
-        } else if (progress >= 0.21 && progress <= 0.26) {
-          op = lerp(progress, 0.21, 0.26, 1, 0);
-          lineY = lerp(progress, 0.21, 0.26, 0, -15);
-        }
-        zoneALine2Ref.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        zoneALine2Ref.current.style.transform = `translate3d(0, ${lineY}px, 0)`;
-      }
-
-      // Subtitle
-      if (zoneADescRef.current) {
-        let op = 0;
-        let descY = 15;
-        if (progress >= 0.13 && progress <= 0.18) {
-          op = lerp(progress, 0.13, 0.18, 0, 1);
-          descY = lerp(progress, 0.13, 0.18, 15, 0);
-        } else if (progress > 0.18 && progress < 0.21) {
-          op = 1;
-          descY = 0;
-        } else if (progress >= 0.21 && progress <= 0.26) {
-          op = lerp(progress, 0.21, 0.26, 1, 0);
-          descY = lerp(progress, 0.21, 0.26, 0, -10);
-        }
-        zoneADescRef.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        zoneADescRef.current.style.transform = `translate3d(0, ${descY}px, 0)`;
-      }
+      stage2Ref.current.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+      stage2Ref.current.style.transform = `translate3d(0, calc(-50% + ${y}px), 0) scale(${scale})`;
     }
 
     // ========================================================
-    // PHASE 02 / ZONE B: HUGE EDITORIAL "RAW MATERIAL" [0.25 - 0.44]
-    // ========================================================
-    if (zoneBMiddleRef.current) {
-      const isVisible = progress >= 0.24 && progress <= 0.45;
-      zoneBMiddleRef.current.style.visibility = isVisible ? "visible" : "hidden";
-
-      let opacity = 0;
-      let x = 30;
-      let y = 25;
-      let scale = 0.96;
-
-      if (progress >= 0.25 && progress <= 0.33) {
-        opacity = lerp(progress, 0.25, 0.33, 0, 1);
-        x = lerp(progress, 0.25, 0.33, 30, 0);
-        y = lerp(progress, 0.25, 0.33, 25, 0);
-        scale = lerp(progress, 0.25, 0.33, 0.96, 1);
-      } else if (progress > 0.33 && progress < 0.39) {
-        opacity = 1;
-        x = 0;
-        y = 0;
-        scale = 1;
-      } else if (progress >= 0.39 && progress <= 0.44) {
-        opacity = lerp(progress, 0.39, 0.44, 1, 0);
-        x = lerp(progress, 0.39, 0.44, 0, -20);
-        y = lerp(progress, 0.39, 0.44, 0, -10);
-        scale = lerp(progress, 0.39, 0.44, 1, 0.98);
-      }
-      zoneBMiddleRef.current.style.opacity = String(Math.max(0, Math.min(1, opacity)));
-      zoneBMiddleRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
-
-      // Line 1: "RAW"
-      if (zoneBLine1Ref.current) {
-        let op = 0;
-        let lineY = 25;
-        if (progress >= 0.25 && progress <= 0.31) {
-          op = lerp(progress, 0.25, 0.31, 0, 1);
-          lineY = lerp(progress, 0.25, 0.31, 25, 0);
-        } else if (progress > 0.31 && progress < 0.39) {
-          op = 1;
-          lineY = 0;
-        } else if (progress >= 0.39 && progress <= 0.44) {
-          op = lerp(progress, 0.39, 0.44, 1, 0);
-          lineY = lerp(progress, 0.39, 0.44, 0, -15);
-        }
-        zoneBLine1Ref.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        zoneBLine1Ref.current.style.transform = `translate3d(0, ${lineY}px, 0)`;
-      }
-
-      // Line 2: "MATERIAL"
-      if (zoneBLine2Ref.current) {
-        let op = 0;
-        let lineY = 35;
-        if (progress >= 0.28 && progress <= 0.34) {
-          op = lerp(progress, 0.28, 0.34, 0, 1);
-          lineY = lerp(progress, 0.28, 0.34, 35, 0);
-        } else if (progress > 0.34 && progress < 0.39) {
-          op = 1;
-          lineY = 0;
-        } else if (progress >= 0.39 && progress <= 0.44) {
-          op = lerp(progress, 0.39, 0.44, 1, 0);
-          lineY = lerp(progress, 0.39, 0.44, 0, -15);
-        }
-        zoneBLine2Ref.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        zoneBLine2Ref.current.style.transform = `translate3d(0, ${lineY}px, 0)`;
-      }
-
-      // Subtitle
-      if (zoneBDescRef.current) {
-        let op = 0;
-        let descY = 15;
-        if (progress >= 0.30 && progress <= 0.35) {
-          op = lerp(progress, 0.30, 0.35, 0, 1);
-          descY = lerp(progress, 0.30, 0.35, 15, 0);
-        } else if (progress > 0.35 && progress < 0.39) {
-          op = 1;
-          descY = 0;
-        } else if (progress >= 0.39 && progress <= 0.44) {
-          op = lerp(progress, 0.39, 0.44, 1, 0);
-          descY = lerp(progress, 0.39, 0.44, 0, -10);
-        }
-        zoneBDescRef.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        zoneBDescRef.current.style.transform = `translate3d(0, ${descY}px, 0)`;
-      }
-    }
-
-    // ========================================================
-    // PHASE 03 / ZONE C: MAIN HERO FULL-WIDTH EDITORIAL [0.45 - 0.74]
-    // Individual line-by-line staggered reveal:
-    // Line 1: "MINERAL." (progress 0.46 -> 0.52)
-    // Line 2: "BUILT FROM" (progress 0.51 -> 0.57)
-    // Line 3: "THE EARTH." (progress 0.56 -> 0.62)
-    // ========================================================
-    if (zoneCLowerLeftRef.current) {
-      const isVisible = progress >= 0.44 && progress <= 0.74;
-      zoneCLowerLeftRef.current.style.visibility = isVisible ? "visible" : "hidden";
-
-      // Line 1: "MINERAL."
-      if (line1Ref.current) {
-        let op = 0;
-        let y = 45;
-        let scale = 0.97;
-        if (progress >= 0.46 && progress <= 0.52) {
-          op = lerp(progress, 0.46, 0.52, 0, 1);
-          y = lerp(progress, 0.46, 0.52, 45, 0);
-          scale = lerp(progress, 0.46, 0.52, 0.97, 1);
-        } else if (progress > 0.52 && progress < 0.67) {
-          op = 1;
-          y = 0;
-          scale = 1;
-        } else if (progress >= 0.67 && progress <= 0.73) {
-          op = lerp(progress, 0.67, 0.73, 1, 0);
-          y = lerp(progress, 0.67, 0.73, 0, -25);
-          scale = lerp(progress, 0.67, 0.73, 1, 0.98);
-        }
-        line1Ref.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        line1Ref.current.style.transform = `translate3d(0, ${y}px, 0) scale(${scale})`;
-      }
-
-      // Line 2: "BUILT FROM"
-      if (line2Ref.current) {
-        let op = 0;
-        let y = 55;
-        let scale = 0.97;
-        if (progress >= 0.51 && progress <= 0.57) {
-          op = lerp(progress, 0.51, 0.57, 0, 1);
-          y = lerp(progress, 0.51, 0.57, 55, 0);
-          scale = lerp(progress, 0.51, 0.57, 0.97, 1);
-        } else if (progress > 0.57 && progress < 0.67) {
-          op = 1;
-          y = 0;
-          scale = 1;
-        } else if (progress >= 0.67 && progress <= 0.73) {
-          op = lerp(progress, 0.67, 0.73, 1, 0);
-          y = lerp(progress, 0.67, 0.73, 0, -25);
-          scale = lerp(progress, 0.67, 0.73, 1, 0.98);
-        }
-        line2Ref.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        line2Ref.current.style.transform = `translate3d(0, ${y}px, 0) scale(${scale})`;
-      }
-
-      // Line 3: "THE EARTH."
-      if (line3Ref.current) {
-        let op = 0;
-        let y = 65;
-        let scale = 0.97;
-        if (progress >= 0.56 && progress <= 0.62) {
-          op = lerp(progress, 0.56, 0.62, 0, 1);
-          y = lerp(progress, 0.56, 0.62, 65, 0);
-          scale = lerp(progress, 0.56, 0.62, 0.97, 1);
-        } else if (progress > 0.62 && progress < 0.67) {
-          op = 1;
-          y = 0;
-          scale = 1;
-        } else if (progress >= 0.67 && progress <= 0.73) {
-          op = lerp(progress, 0.67, 0.73, 1, 0);
-          y = lerp(progress, 0.67, 0.73, 0, -25);
-          scale = lerp(progress, 0.67, 0.73, 1, 0.98);
-        }
-        line3Ref.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        line3Ref.current.style.transform = `translate3d(0, ${y}px, 0) scale(${scale})`;
-      }
-
-      // Supporting Line & Label
-      if (lineDescRef.current) {
-        let op = 0;
-        let y = 20;
-        if (progress >= 0.59 && progress <= 0.64) {
-          op = lerp(progress, 0.59, 0.64, 0, 1);
-          y = lerp(progress, 0.59, 0.64, 20, 0);
-        } else if (progress > 0.64 && progress < 0.67) {
-          op = 1;
-          y = 0;
-        } else if (progress >= 0.67 && progress <= 0.73) {
-          op = lerp(progress, 0.67, 0.73, 1, 0);
-          y = lerp(progress, 0.67, 0.73, 0, -15);
-        }
-        lineDescRef.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        lineDescRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
-      }
-    }
-
-    // ========================================================
-    // PHASE 04 / ZONE D: MIDDLE-LEFT PRECISION [0.72 - 0.85]
+    // PHASE 03: STAGE 03 AT BOTTOM [0.46 - 0.72]
     // "ENGINEERED THROUGH PRECISION."
     // ========================================================
-    if (zoneDMiddleRef.current) {
-      const isVisible = progress >= 0.71 && progress <= 0.86;
-      zoneDMiddleRef.current.style.visibility = isVisible ? "visible" : "hidden";
+    if (stage3Ref.current) {
+      const isVisible = progress >= 0.45 && progress <= 0.73;
+      stage3Ref.current.style.visibility = isVisible ? "visible" : "hidden";
 
-      // Line 1: "ENGINEERED"
-      if (zoneDLine1Ref.current) {
-        let op = 0;
-        let y = 35;
-        if (progress >= 0.72 && progress <= 0.76) {
-          op = lerp(progress, 0.72, 0.76, 0, 1);
-          y = lerp(progress, 0.72, 0.76, 35, 0);
-        } else if (progress > 0.76 && progress < 0.81) {
-          op = 1;
-          y = 0;
-        } else if (progress >= 0.81 && progress <= 0.85) {
-          op = lerp(progress, 0.81, 0.85, 1, 0);
-          y = lerp(progress, 0.81, 0.85, 0, -20);
-        }
-        zoneDLine1Ref.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        zoneDLine1Ref.current.style.transform = `translate3d(0, ${y}px, 0)`;
-      }
-
-      // Line 2: "THROUGH"
-      if (zoneDLine2Ref.current) {
-        let op = 0;
-        let y = 40;
-        if (progress >= 0.74 && progress <= 0.78) {
-          op = lerp(progress, 0.74, 0.78, 0, 1);
-          y = lerp(progress, 0.74, 0.78, 40, 0);
-        } else if (progress > 0.78 && progress < 0.81) {
-          op = 1;
-          y = 0;
-        } else if (progress >= 0.81 && progress <= 0.85) {
-          op = lerp(progress, 0.81, 0.85, 1, 0);
-          y = lerp(progress, 0.81, 0.85, 0, -20);
-        }
-        zoneDLine2Ref.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        zoneDLine2Ref.current.style.transform = `translate3d(0, ${y}px, 0)`;
-      }
-
-      // Line 3: "PRECISION."
-      if (zoneDLine3Ref.current) {
-        let op = 0;
-        let y = 45;
-        if (progress >= 0.76 && progress <= 0.80) {
-          op = lerp(progress, 0.76, 0.80, 0, 1);
-          y = lerp(progress, 0.76, 0.80, 45, 0);
-        } else if (progress > 0.80 && progress < 0.81) {
-          op = 1;
-          y = 0;
-        } else if (progress >= 0.81 && progress <= 0.85) {
-          op = lerp(progress, 0.81, 0.85, 1, 0);
-          y = lerp(progress, 0.81, 0.85, 0, -20);
-        }
-        zoneDLine3Ref.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        zoneDLine3Ref.current.style.transform = `translate3d(0, ${y}px, 0)`;
-      }
-
-      // Subtitle
-      if (zoneDDescRef.current) {
-        let op = 0;
-        let y = 15;
-        if (progress >= 0.78 && progress <= 0.81) {
-          op = lerp(progress, 0.78, 0.81, 0, 1);
-          y = lerp(progress, 0.78, 0.81, 15, 0);
-        } else if (progress > 0.81 && progress < 0.82) {
-          op = 1;
-          y = 0;
-        } else if (progress >= 0.82 && progress <= 0.85) {
-          op = lerp(progress, 0.82, 0.85, 1, 0);
-          y = lerp(progress, 0.82, 0.85, 0, -15);
-        }
-        zoneDDescRef.current.style.opacity = String(Math.max(0, Math.min(1, op)));
-        zoneDDescRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
-      }
-    }
-
-    // ========================================================
-    // PHASE 05 / ZONE E: FINAL PRODUCT & CTAs [0.84 - 1.00]
-    // "MINERALS. REFINED FOR MODERN INDUSTRY."
-    // ========================================================
-    if (zoneEFinalRef.current) {
       let opacity = 0;
       let y = 25;
       let scale = 0.97;
-      if (progress >= 0.83 && progress <= 0.91) {
-        opacity = lerp(progress, 0.83, 0.91, 0, 1);
-        y = lerp(progress, 0.83, 0.91, 25, 0);
-        scale = lerp(progress, 0.83, 0.91, 0.97, 1);
-      } else if (progress > 0.91) {
+
+      if (progress >= 0.46 && progress <= 0.54) {
+        opacity = lerp(progress, 0.46, 0.54, 0, 1);
+        y = lerp(progress, 0.46, 0.54, 25, 0);
+        scale = lerp(progress, 0.46, 0.54, 0.97, 1);
+      } else if (progress > 0.54 && progress < 0.64) {
+        opacity = 1;
+        y = 0;
+        scale = 1;
+      } else if (progress >= 0.64 && progress <= 0.72) {
+        opacity = lerp(progress, 0.64, 0.72, 1, 0);
+        y = lerp(progress, 0.64, 0.72, 0, -20);
+        scale = lerp(progress, 0.64, 0.72, 1, 0.98);
+      }
+
+      stage3Ref.current.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+      stage3Ref.current.style.transform = `translate3d(0, ${y}px, 0) scale(${scale})`;
+    }
+
+    // ========================================================
+    // PHASE 04: STAGE 04 AT BOTTOM [0.70 - 1.00]
+    // FINAL PRODUCT & CTAs
+    // ========================================================
+    if (stage4Ref.current) {
+      let opacity = 0;
+      let y = 25;
+      let scale = 0.97;
+
+      if (progress >= 0.70 && progress <= 0.80) {
+        opacity = lerp(progress, 0.70, 0.80, 0, 1);
+        y = lerp(progress, 0.70, 0.80, 25, 0);
+        scale = lerp(progress, 0.70, 0.80, 0.97, 1);
+      } else if (progress > 0.80) {
         opacity = 1;
         y = 0;
         scale = 1;
       }
-      zoneEFinalRef.current.style.opacity = String(Math.max(0, Math.min(1, opacity)));
-      zoneEFinalRef.current.style.transform = `translate3d(0, ${y}px, 0) scale(${scale})`;
-      zoneEFinalRef.current.style.visibility = opacity > 0.01 ? "visible" : "hidden";
+
+      stage4Ref.current.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+      stage4Ref.current.style.transform = `translate3d(0, ${y}px, 0) scale(${scale})`;
+      stage4Ref.current.style.visibility = opacity > 0.01 ? "visible" : "hidden";
     }
   }, [progress]);
 
@@ -427,117 +162,42 @@ export default function MobileHeroOverlay({ progress }: MobileHeroOverlayProps) 
       aria-hidden="true"
     >
       {/* ========================================================
-          SUBTLE LOCALIZED SOFT BASE GRADIENT BEHIND BOTTOM AREA ONLY
-          (Image remains 100% naturally bright, clear & uncluttered)
+          SUBTLE LOCALIZED SOFT BASE GRADIENTS FOR CONTRAST
           ======================================================== */}
+      {/* Bottom Atmosphere Gradient */}
       <div
-        className="absolute inset-x-0 bottom-0 h-[48vh] pointer-events-none z-1"
+        className="absolute inset-x-0 bottom-0 h-[52vh] pointer-events-none z-1"
         style={{
           background:
-            "linear-gradient(to top, rgba(7,7,9,0.72) 0%, rgba(7,7,9,0.30) 55%, rgba(7,7,9,0) 100%)",
+            "linear-gradient(to top, rgba(7,7,9,0.88) 0%, rgba(7,7,9,0.45) 55%, rgba(7,7,9,0) 100%)",
+        }}
+      />
+      {/* Center Subtle Atmosphere Vignette for Stage 02 */}
+      <div
+        className="absolute inset-0 pointer-events-none z-1"
+        style={{
+          background:
+            "radial-gradient(circle at center, rgba(7,7,9,0.45) 0%, rgba(7,7,9,0.15) 50%, rgba(7,7,9,0) 75%)",
         }}
       />
 
       {/* ========================================================
-          PHASE 01 / ZONE A: HUGE EDITORIAL "FROM THE EARTH" [0.07 - 0.26]
-          Occupies 75% - 90% mobile viewport width with large typography
+          PHASE 01: INITIAL HERO TITLE AT BOTTOM [0.00 - 0.23]
+          Visible immediately before scrolling begins
           ======================================================== */}
       <div
-        ref={zoneATopRightRef}
-        className="absolute top-[16%] left-[5vw] right-[5vw] w-[90%] text-right z-20 will-change-transform flex flex-col items-end"
-        style={{ visibility: "hidden" }}
-      >
-        {/* Small Label */}
-        <div className="flex items-center justify-end gap-1.5 text-[11px] xs:text-xs font-bold uppercase tracking-[0.14em] text-[#E52323] mb-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
-          <span className="text-white/90">STAGE 01</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
-          <span>DEPOSIT ORIGIN</span>
-        </div>
-
-        {/* Huge Main Headline (75% - 90% Viewport Width) */}
-        <h3 className="font-display font-black text-white uppercase tracking-tighter leading-[0.88] mb-2.5 drop-shadow-[0_6px_28px_rgba(0,0,0,0.98)] flex flex-col items-end text-[clamp(44px,12.8vw,74px)]">
-          <span
-            ref={zoneALine1Ref}
-            className="will-change-transform inline-block whitespace-nowrap"
-          >
-            FROM THE
-          </span>
-          <span
-            ref={zoneALine2Ref}
-            className="will-change-transform inline-block whitespace-nowrap text-[#F3F4F6]"
-          >
-            EARTH
-          </span>
-        </h3>
-
-        {/* Small Description */}
-        <p
-          ref={zoneADescRef}
-          className="text-xs xs:text-sm text-white/90 font-normal leading-snug mt-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] will-change-transform max-w-xs"
-        >
-          Natural minerals shaped across geological time.
-        </p>
-      </div>
-
-      {/* ========================================================
-          PHASE 02 / ZONE B: HUGE EDITORIAL "RAW MATERIAL" [0.25 - 0.44]
-          Occupies 75% - 90% mobile viewport width with large typography
-          ======================================================== */}
-      <div
-        ref={zoneBMiddleRef}
-        className="absolute top-[32%] left-[5vw] right-[5vw] w-[90%] text-right z-20 will-change-transform flex flex-col items-end"
-        style={{ visibility: "hidden" }}
-      >
-        {/* Small Label */}
-        <div className="flex items-center justify-end gap-1.5 text-[11px] xs:text-xs font-bold uppercase tracking-[0.14em] text-[#E52323] mb-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
-          <span className="text-white/90">STAGE 02</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
-          <span>UNREFINED MINERAL</span>
-        </div>
-
-        {/* Huge Main Headline (75% - 90% Viewport Width) */}
-        <h3 className="font-display font-black text-white uppercase tracking-tighter leading-[0.88] mb-2.5 drop-shadow-[0_6px_28px_rgba(0,0,0,0.98)] flex flex-col items-end text-[clamp(44px,12.8vw,74px)]">
-          <span
-            ref={zoneBLine1Ref}
-            className="will-change-transform inline-block whitespace-nowrap"
-          >
-            RAW
-          </span>
-          <span
-            ref={zoneBLine2Ref}
-            className="will-change-transform inline-block whitespace-nowrap text-[#F3F4F6]"
-          >
-            MATERIAL
-          </span>
-        </h3>
-
-        {/* Small Description */}
-        <p
-          ref={zoneBDescRef}
-          className="text-xs xs:text-sm text-white/90 font-normal leading-snug mt-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] will-change-transform max-w-xs"
-        >
-          High-purity calcium &amp; dolomite stone extracted for processing.
-        </p>
-      </div>
-
-      {/* ========================================================
-          PHASE 03 / ZONE C: MAIN HERO EDITORIAL HEADING [0.45 - 0.74]
-          Spans ~90% mobile viewport width with large fluid typography
-          ======================================================== */}
-      <div
-        ref={zoneCLowerLeftRef}
-        className="absolute left-[5vw] right-[5vw] bottom-[calc(7vh+env(safe-area-inset-bottom,0px))] w-[90%] z-20 will-change-transform"
-        style={{ visibility: "hidden" }}
+        ref={stage1Ref}
+        className="absolute left-[5vw] right-[5vw] bottom-[calc(9.5vh+env(safe-area-inset-bottom,0px))] w-[90%] z-20 will-change-transform"
       >
         {/* Label Header */}
         <div className="flex items-center gap-2 text-[11px] xs:text-xs font-bold uppercase tracking-[0.14em] text-[#E52323] mb-2.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
-          <span className="text-white/90">01</span>
+          <span className="text-white/90">STAGE 01</span>
           <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
-          <span className="text-white/90">MINERAL ORIGINS</span>
+          <span className="text-white/90">MINERAL ORIGIN</span>
         </div>
 
         {/* Large Editorial Headline */}
-        <h2 className="font-display font-black text-white uppercase tracking-tighter leading-[0.88] mb-3 drop-shadow-[0_6px_28px_rgba(0,0,0,0.98)] flex flex-col items-start w-full text-[clamp(40px,12.2vw,68px)]">
+        <h1 className="font-display font-black text-white uppercase tracking-tighter leading-[0.88] mb-3 drop-shadow-[0_6px_28px_rgba(0,0,0,0.98)] flex flex-col items-start w-full text-[clamp(40px,12.2vw,68px)]">
           <span
             ref={line1Ref}
             className="will-change-transform inline-block whitespace-nowrap"
@@ -556,7 +216,7 @@ export default function MobileHeroOverlay({ progress }: MobileHeroOverlayProps) 
           >
             THE EARTH.
           </span>
-        </h2>
+        </h1>
 
         {/* Secondary Subtitle */}
         <p
@@ -568,57 +228,93 @@ export default function MobileHeroOverlay({ progress }: MobileHeroOverlayProps) 
       </div>
 
       {/* ========================================================
-          PHASE 04 / ZONE D: MIDDLE-LEFT PROCESSING [0.72 - 0.85]
-          "ENGINEERED THROUGH PRECISION."
+          PHASE 02: STAGE 02 IN THE CENTER OF SCREEN [0.22 - 0.48]
+          Appears right in the middle as user starts scrolling
           ======================================================== */}
       <div
-        ref={zoneDMiddleRef}
-        className="absolute left-[5vw] right-[5vw] top-[30%] w-[90%] z-20 will-change-transform"
+        ref={stage2Ref}
+        className="absolute left-[5vw] right-[5vw] top-1/2 w-[90%] z-20 will-change-transform flex flex-col items-center text-center"
         style={{ visibility: "hidden" }}
       >
-        <div className="flex items-center gap-2 text-[11px] xs:text-xs font-bold uppercase tracking-[0.14em] text-[#E52323] mb-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
-          <span className="text-white/90">03</span>
+        <div className="flex items-center justify-center gap-1.5 text-[11px] xs:text-xs font-bold uppercase tracking-[0.16em] text-[#E52323] mb-2.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+          <span className="text-white/90">STAGE 02</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
+          <span>UNREFINED MINERAL</span>
+        </div>
+
+        <h2 className="font-display font-black text-white uppercase tracking-tighter leading-[0.88] mb-3 drop-shadow-[0_6px_28px_rgba(0,0,0,0.98)] flex flex-col items-center w-full text-[clamp(40px,12.2vw,68px)]">
+          <span
+            ref={stage2Line1Ref}
+            className="will-change-transform inline-block whitespace-nowrap"
+          >
+            RAW
+          </span>
+          <span
+            ref={stage2Line2Ref}
+            className="will-change-transform inline-block whitespace-nowrap text-[#F3F4F6]"
+          >
+            MATERIAL.
+          </span>
+        </h2>
+
+        <p
+          ref={stage2DescRef}
+          className="text-xs xs:text-sm text-white/90 font-normal leading-snug drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] will-change-transform max-w-xs mx-auto"
+        >
+          High-purity calcium &amp; dolomite stone extracted for processing.
+        </p>
+      </div>
+
+      {/* ========================================================
+          PHASE 03: STAGE 03 AT BOTTOM [0.46 - 0.72]
+          ======================================================== */}
+      <div
+        ref={stage3Ref}
+        className="absolute left-[5vw] right-[5vw] bottom-[calc(9.5vh+env(safe-area-inset-bottom,0px))] w-[90%] z-20 will-change-transform"
+        style={{ visibility: "hidden" }}
+      >
+        <div className="flex items-center gap-2 text-[11px] xs:text-xs font-bold uppercase tracking-[0.14em] text-[#E52323] mb-2.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+          <span className="text-white/90">STAGE 03</span>
           <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
           <span className="text-white/90">PROCESSING</span>
         </div>
 
-        <h2 className="font-display font-black text-white uppercase tracking-tighter leading-[0.88] mb-2.5 drop-shadow-[0_6px_28px_rgba(0,0,0,0.98)] flex flex-col items-start w-full text-[clamp(34px,10.2vw,56px)]">
-          <span ref={zoneDLine1Ref} className="will-change-transform inline-block whitespace-nowrap">
+        <h2 className="font-display font-black text-white uppercase tracking-tighter leading-[0.88] mb-3 drop-shadow-[0_6px_28px_rgba(0,0,0,0.98)] flex flex-col items-start w-full text-[clamp(34px,10.2vw,56px)]">
+          <span ref={stage3Line1Ref} className="will-change-transform inline-block whitespace-nowrap">
             ENGINEERED
           </span>
-          <span ref={zoneDLine2Ref} className="will-change-transform inline-block whitespace-nowrap text-[#F3F4F6]">
+          <span ref={stage3Line2Ref} className="will-change-transform inline-block whitespace-nowrap text-[#F3F4F6]">
             THROUGH
           </span>
-          <span ref={zoneDLine3Ref} className="will-change-transform inline-block whitespace-nowrap text-white">
+          <span ref={stage3Line3Ref} className="will-change-transform inline-block whitespace-nowrap text-white">
             PRECISION.
           </span>
         </h2>
 
         <p
-          ref={zoneDDescRef}
+          ref={stage3DescRef}
           className="text-xs xs:text-sm text-white/90 font-normal leading-snug drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] will-change-transform max-w-sm"
         >
-          Custom mesh sizes engineered for consistent industrial chemistry.
+          Custom mesh sizes from 0–240 mesh engineered for consistent industrial chemistry.
         </p>
       </div>
 
       {/* ========================================================
-          PHASE 05 / ZONE E: LOWER-LEFT FINAL PRODUCT [0.84 - 1.00]
-          "MINERALS. REFINED FOR MODERN INDUSTRY." + CTAs
+          PHASE 04: STAGE 04 AT BOTTOM [0.70 - 1.00]
           ======================================================== */}
       <div
-        ref={zoneEFinalRef}
-        className="absolute left-[5vw] right-[5vw] bottom-[calc(7vh+env(safe-area-inset-bottom,0px))] w-[90%] z-20 will-change-transform"
+        ref={stage4Ref}
+        className="absolute left-[5vw] right-[5vw] bottom-[calc(9.5vh+env(safe-area-inset-bottom,0px))] w-[90%] z-20 will-change-transform"
         style={{ visibility: "hidden" }}
       >
         <div className="flex items-center gap-2 text-[11px] xs:text-xs font-bold uppercase tracking-[0.14em] text-[#E52323] mb-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
-          <span className="text-white/90">04</span>
+          <span className="text-white/90">STAGE 04</span>
           <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
           <span className="text-white/90">FINISHED PRODUCT</span>
         </div>
 
         <h2 className="font-display font-black text-white uppercase tracking-tighter leading-[0.88] mb-2.5 drop-shadow-[0_6px_28px_rgba(0,0,0,0.98)] flex flex-col items-start w-full text-[clamp(32px,9.5vw,52px)]">
-          <span className="whitespace-nowrap">MINERALS.</span>
+          <span className="whitespace-nowrap">DOLOMITE.</span>
           <span className="whitespace-nowrap text-[#F3F4F6]">REFINED FOR</span>
           <span className="whitespace-nowrap">MODERN INDUSTRY.</span>
         </h2>
@@ -655,5 +351,6 @@ export default function MobileHeroOverlay({ progress }: MobileHeroOverlayProps) 
     </div>
   );
 }
+
 
 
