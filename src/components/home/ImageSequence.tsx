@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { ChevronDown, ArrowRight } from "lucide-react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
-
-import MobileHeroOverlay from "./MobileHeroOverlay";
 
 interface ImageSequenceProps {
   desktopFolderPath?: string;
   mobileFolderPath?: string;
+  mobileVideoPath?: string;
   desktopTotalFrames?: number;
   mobileTotalFrames?: number;
   /** Legacy fallback props */
@@ -16,119 +15,276 @@ interface ImageSequenceProps {
   folderPath?: string;
 }
 
+interface StageLine {
+  text: string;
+  highlight?: boolean;
+}
+
 interface StageData {
   step: string;
   theme: string;
-  desktopTitle: React.ReactNode;
-  mobileTitle: React.ReactNode;
-  supporting: string;
+  lines: StageLine[];
+  supporting?: string;
   hasCta?: boolean;
 }
 
 const STAGES: Record<number, StageData> = {
   1: {
     step: "01",
-    theme: "RAW MATERIAL",
-    desktopTitle: (
-      <>
-        MINERAL.
-        <br />
-        BUILT FROM THE EARTH.
-      </>
-    ),
-    mobileTitle: (
-      <>
-        MINERAL.
-        <br />
-        BUILT FROM
-        <br />
-        THE EARTH.
-      </>
-    ),
-    supporting: "Mineral manufacturing rooted in experience.",
+    theme: "MINERAL ORIGIN",
+    lines: [{ text: "MINERAL" }, { text: "MANUFACTURING." }],
+    supporting: "Built on experience since 1997. Mineral manufacturing & supply.",
   },
   2: {
     step: "02",
     theme: "PROCESSING",
-    desktopTitle: (
-      <>
-        FROM RAW MATERIAL
-        <br />
-        TO REFINED PRODUCT.
-      </>
-    ),
-    mobileTitle: (
-      <>
-        FROM RAW MATERIAL
-        <br />
-        TO REFINED PRODUCT.
-      </>
-    ),
+    lines: [{ text: "FROM RAW MATERIAL" }, { text: "TO REFINED PRODUCT." }],
     supporting: "Processing shaped by established manufacturing experience.",
   },
   3: {
     step: "03",
     theme: "REFINEMENT",
-    desktopTitle: (
-      <>
-        PRECISION
-        <br />
-        IN EVERY
-        <br />
-        PARTICLE.
-      </>
-    ),
-    mobileTitle: (
-      <>
-        PRECISION
-        <br />
-        IN EVERY
-        <br />
-        PARTICLE.
-      </>
-    ),
-    supporting:
-      "Dolomite supplied in formats and particle sizes based on customer requirements.",
+    lines: [{ text: "0–240 MESH" }, { text: "PRECISION IN EVERY PARTICLE." }],
+    supporting: "Standard mesh options: 100 / 200 / 240 Mesh | Customised up to 240 Mesh.",
   },
   4: {
     step: "04",
     theme: "FINISHED PRODUCT",
-    desktopTitle: (
-      <>
-        DOLOMITE.
-        <br />
-        A CORE PRODUCT OF{" "}
-        <span className="text-[#E52323]">VISION STONES.</span>
-      </>
-    ),
-    mobileTitle: (
-      <>
-        DOLOMITE.
-        <br />
-        A CORE PRODUCT OF
-        <br />
-        <span className="text-[#E52323]">VISION STONES.</span>
-      </>
-    ),
-    supporting: "100 / 200 / 240 Mesh | Customised requirements from 0–240 Mesh",
+    lines: [{ text: "BUILT FOR INDUSTRY." }, { text: "VISION STONES.", highlight: true }],
+    supporting: "Dolomite is a key focus product. Customised particle sizes from 0–240 Mesh.",
     hasCta: true,
   },
 };
 
 /**
- * Proportional stage calculation
+ * Proportional stage calculation for desktop sequence
  */
-function getStageFromFrame(frameIndex: number, totalFrames: number = 120): number {
+function getStageFromFrame(frameIndex: number, totalFrames: number = 192): number {
   const progress = frameIndex / Math.max(1, totalFrames - 1);
-  if (progress < 0.21) return 1;
-  if (progress < 0.46) return 2;
-  if (progress < 0.86) return 3;
+  if (progress < 0.22) return 1;
+  if (progress < 0.48) return 2;
+  if (progress < 0.82) return 3;
   return 4;
+}
+
+/**
+ * Animated Typography Component with Staged Line-by-Line Fade-Up & Exit transitions
+ */
+function HeroStageTypography({
+  stageNumber,
+  isMobile,
+}: {
+  stageNumber: number;
+  isMobile: boolean;
+}) {
+  const [displayedStageNum, setDisplayedStageNum] = useState<number>(stageNumber);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isAnimatingRef = useRef<boolean>(false);
+  const queuedStageRef = useRef<number>(stageNumber);
+
+  // Stage change animation (Exit: y -20, opacity 0 -> Enter: y 35 to 0, opacity 0 to 1)
+  useEffect(() => {
+    queuedStageRef.current = stageNumber;
+    if (stageNumber === displayedStageNum || isAnimatingRef.current) return;
+
+    const el = containerRef.current;
+    if (!el) {
+      setDisplayedStageNum(stageNumber);
+      return;
+    }
+
+    isAnimatingRef.current = true;
+
+    import("gsap").then(({ default: gsap }) => {
+      // Animate out current active title group
+      gsap.to(el, {
+        opacity: 0,
+        y: -20,
+        duration: 0.28,
+        ease: "power2.in",
+        onComplete: () => {
+          const nextStage = queuedStageRef.current;
+          setDisplayedStageNum(nextStage);
+
+          // Reset container transform
+          gsap.set(el, { opacity: 1, y: 0 });
+
+          // Animate in individual lines & supporting text with controlled stagger
+          const label = el.querySelector(".hero-anim-label");
+          const lines = el.querySelectorAll(".hero-anim-line");
+          const supporting = el.querySelector(".hero-anim-supporting");
+          const cta = el.querySelector(".hero-anim-cta");
+
+          const targets = [label, ...Array.from(lines), supporting, cta].filter(Boolean);
+
+          gsap.fromTo(
+            targets,
+            {
+              opacity: 0,
+              y: 35,
+            },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.65,
+              stagger: 0.08,
+              ease: "power3.out",
+              overwrite: "auto",
+              onComplete: () => {
+                isAnimatingRef.current = false;
+                if (queuedStageRef.current !== nextStage) {
+                  setDisplayedStageNum(queuedStageRef.current);
+                }
+              },
+            }
+          );
+        },
+      });
+    });
+  }, [stageNumber, displayedStageNum]);
+
+  // Initial mount fade-up
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    import("gsap").then(({ default: gsap }) => {
+      const label = el.querySelector(".hero-anim-label");
+      const lines = el.querySelectorAll(".hero-anim-line");
+      const supporting = el.querySelector(".hero-anim-supporting");
+      const cta = el.querySelector(".hero-anim-cta");
+      const targets = [label, ...Array.from(lines), supporting, cta].filter(Boolean);
+
+      gsap.fromTo(
+        targets,
+        {
+          opacity: 0,
+          y: 35,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.75,
+          stagger: 0.08,
+          ease: "power3.out",
+          overwrite: "auto",
+        }
+      );
+    });
+  }, []);
+
+  const stage = STAGES[displayedStageNum] || STAGES[1];
+
+  return (
+    <div
+      ref={containerRef}
+      className={`hero-stage-content will-change-transform ${
+        isMobile
+          ? "space-y-3 xs:space-y-3.5 flex flex-col items-center text-center w-full max-w-[94vw] mx-auto"
+          : "space-y-3 sm:space-y-4 lg:space-y-5 text-left max-w-full"
+      }`}
+    >
+      {/* EYEBROW / SMALL STAGE LABEL */}
+      <div
+        className={`hero-anim-label flex items-center gap-2 sm:gap-2.5 text-[10px] xs:text-xs sm:text-xs font-display font-bold uppercase tracking-[0.16em] sm:tracking-[0.25em] text-[#E52323] drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] ${
+          isMobile ? "justify-center" : "justify-start"
+        }`}
+      >
+        <span className="text-white/80">STAGE {stage.step}</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
+        <span>{stage.theme}</span>
+      </div>
+
+      {/* MAIN TITLE (Animated Line by Line) */}
+      <h1
+        className={`hero-title font-display font-black text-white uppercase tracking-tight sm:tracking-tighter drop-shadow-[0_6px_30px_rgba(0,0,0,0.95)] ${
+          isMobile
+            ? "text-[clamp(1.85rem,8.4vw,3.2rem)] leading-[0.93] text-center w-full"
+            : "text-[clamp(3.5rem,5.6vw,6.5rem)] leading-[0.90] text-left"
+        }`}
+      >
+        {stage.lines.map((line, idx) => (
+          <span
+            key={idx}
+            className={`hero-anim-line block ${
+              line.highlight ? "text-[#E52323]" : "text-white"
+            }`}
+          >
+            {line.text}
+          </span>
+        ))}
+      </h1>
+
+      {/* SUPPORTING TEXT */}
+      {stage.supporting && (
+        <p
+          className={`hero-anim-supporting font-display font-normal text-white/90 drop-shadow-[0_3px_12px_rgba(0,0,0,0.9)] ${
+            isMobile
+              ? "text-xs xs:text-sm max-w-[92%] leading-relaxed text-center mx-auto"
+              : "text-xs xs:text-sm sm:text-base lg:text-lg max-w-xl xl:max-w-2xl leading-relaxed text-left"
+          }`}
+        >
+          {stage.supporting}
+        </p>
+      )}
+
+      {/* STAGE 4 CTAs & TRUST TAG */}
+      {stage.hasCta && (
+        <div
+          className={`hero-anim-cta hero-cta pointer-events-auto space-y-2.5 sm:space-y-4 pt-1 w-full ${
+            isMobile ? "flex flex-col items-center max-w-[94%]" : ""
+          }`}
+        >
+          {/* Trust Tag */}
+          <div
+            className={`flex flex-wrap items-center gap-2 sm:gap-5 text-[9px] xs:text-[10px] sm:text-xs font-display uppercase tracking-widest text-white/85 font-bold border-t border-white/20 pt-2.5 sm:pt-4 ${
+              isMobile ? "justify-center" : ""
+            }`}
+          >
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
+              <span>MANUFACTURING ROOTS SINCE 1997</span>
+            </div>
+            <span className="text-white/30 hidden sm:inline">•</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-[#E52323] font-black">450+</span>
+              <span>CLIENTS</span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div
+            className={`flex flex-wrap items-center gap-2.5 sm:gap-4 pt-0.5 ${
+              isMobile ? "justify-center" : ""
+            }`}
+          >
+            <Link
+              href="#products"
+              className="inline-flex items-center gap-1.5 text-[11px] sm:text-sm font-display font-bold uppercase tracking-widest text-white hover:text-[#E52323] transition-colors py-1.5 cursor-pointer group"
+            >
+              <span className="border-b-2 border-white group-hover:border-[#E52323] pb-0.5 transition-colors">
+                VIEW PRODUCTS →
+              </span>
+            </Link>
+
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-1.5 bg-[#E52323] text-white hover:bg-[#C91A1A] active:bg-[#A81414] text-[11px] sm:text-sm font-display font-bold uppercase tracking-wider px-3.5 sm:px-5 py-2 sm:py-2.5 transition-all shadow-lg hover:shadow-[#E52323]/25"
+            >
+              <span>REQUEST A QUOTE</span>
+              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ImageSequence({
   desktopFolderPath = "/dolomite -powder 2",
   mobileFolderPath = "/mobile hero",
+  mobileVideoPath = "/mobile hero/Mobile-video.mp4",
   desktopTotalFrames = 192,
   mobileTotalFrames = 120,
   totalFrames: legacyTotalFrames,
@@ -137,11 +293,10 @@ export default function ImageSequence({
   // Resolve paths with backwards compatibility
   const resolvedDesktopFolder = legacyFolderPath || desktopFolderPath;
   const resolvedDesktopFrames = legacyTotalFrames || desktopTotalFrames;
-  const resolvedMobileFolder = mobileFolderPath;
-  const resolvedMobileFrames = mobileTotalFrames;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Viewport mode: mobile (<768px) vs desktop (>=768px)
   const [isMobile, setIsMobile] = useState<boolean>(() => {
@@ -151,86 +306,78 @@ export default function ImageSequence({
     return false;
   });
 
-  const activeFolder = isMobile ? resolvedMobileFolder : resolvedDesktopFolder;
-  const activeTotalFrames = isMobile ? resolvedMobileFrames : resolvedDesktopFrames;
+  const [initialReady, setInitialReady] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
 
-  const [initialReady, setInitialReady] = useState<boolean>(false);
   const [activeStage, setActiveStage] = useState<number>(1);
-  const [scrollProgress, setScrollProgress] = useState<number>(0);
+  const [mobileStage, setMobileStage] = useState<number>(1);
   const [showScrollPrompt, setShowScrollPrompt] = useState<boolean>(true);
 
-  // Images cache & active frame index
+  // Desktop images cache & active frame index
   const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
   const currentFrameIndexRef = useRef<number>(0);
+  const lastRenderedImgRef = useRef<HTMLImageElement | null>(null);
 
-  // Safe Frame URL formatter
-  const getFrameUrl = useCallback((index: number, folder: string) => {
+  // Frame URL formatter for Desktop
+  const getDesktopFrameUrl = useCallback((index: number, folder: string) => {
     const safeFolder = encodeURI(folder);
-    if (folder.includes("mobile")) {
-      const paddedIndex = String(index).padStart(3, "0");
-      return `${safeFolder}/frame_${paddedIndex}.jpg`;
-    }
     const paddedIndex = String(index).padStart(4, "0");
     return `${safeFolder}/frame-${paddedIndex}.jpg`;
   }, []);
 
-  // Cache for the last successfully rendered image to provide instant O(1) fallback
-  const lastRenderedImgRef = useRef<HTMLImageElement | null>(null);
+  // Exact Canvas Draw Function with COVER math (Desktop only)
+  const renderFrame = useCallback((frameIndex: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-  // Exact Canvas Draw Function with COVER math
-  const renderFrame = useCallback(
-    (frameIndex: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+    let img = imagesRef.current[frameIndex];
 
-      let img = imagesRef.current[frameIndex];
+    // Fast O(1) fallback: if target frame isn't ready yet, use the last rendered image
+    if (!img || !img.complete || img.naturalWidth === 0) {
+      img = lastRenderedImgRef.current;
+    }
 
-      // Fast O(1) fallback: if target frame isn't ready yet, use the last rendered image
-      if (!img || !img.complete || img.naturalWidth === 0) {
-        img = lastRenderedImgRef.current;
-      }
+    if (!img || !img.complete || img.naturalWidth === 0) return;
 
-      if (!img || !img.complete || img.naturalWidth === 0) return;
+    lastRenderedImgRef.current = img;
 
-      lastRenderedImgRef.current = img;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const imageWidth = img.naturalWidth;
+    const imageHeight = img.naturalHeight;
 
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const imageWidth = img.naturalWidth;
-      const imageHeight = img.naturalHeight;
+    // Exact cover scaling preserving natural aspect ratio (desktop 16:9)
+    const scale = Math.max(
+      canvasWidth / imageWidth,
+      canvasHeight / imageHeight
+    );
 
-      // Exact cover scaling preserving natural aspect ratio (mobile 9:16, desktop 16:9)
-      const scale = Math.max(
-        canvasWidth / imageWidth,
-        canvasHeight / imageHeight
-      );
+    const drawWidth = imageWidth * scale;
+    const drawHeight = imageHeight * scale;
 
-      const drawWidth = imageWidth * scale;
-      const drawHeight = imageHeight * scale;
+    const focalX = 0.5;
+    const focalY = 0.5;
 
-      // Balanced center focal positioning
-      const focalX = 0.5;
-      const focalY = 0.5;
+    const offsetX = (canvasWidth - drawWidth) * focalX;
+    const offsetY = (canvasHeight - drawHeight) * focalY;
 
-      const offsetX = (canvasWidth - drawWidth) * focalX;
-      const offsetY = (canvasHeight - drawHeight) * focalY;
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+  }, []);
 
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-    },
-    []
-  );
-
-  // Handle high-DPI canvas resizing with mobile DPR capped at 1.5
+  // Handle high-DPI canvas resizing for Desktop
   const resizeCanvas = useCallback(() => {
+    if (isMobile) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Mobile DPR capped at 1.5 to reduce memory & GPU fill-rate pressure; desktop retains 2.0
-    const maxDpr = isMobile ? 1.5 : 2;
-    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const width = window.innerWidth;
     const height = window.innerHeight;
 
@@ -252,8 +399,19 @@ export default function ImageSequence({
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
-      setIsMobile((prev) => (prev !== mobile ? mobile : prev));
-      resizeCanvas();
+      setIsMobile((prev) => {
+        if (prev !== mobile) {
+          if (mobile) {
+            setInitialReady(true);
+          }
+          return mobile;
+        }
+        return prev;
+      });
+
+      if (!mobile) {
+        resizeCanvas();
+      }
     };
 
     window.addEventListener("resize", handleResize, { passive: true });
@@ -265,14 +423,14 @@ export default function ImageSequence({
     };
   }, [resizeCanvas]);
 
-  // On-demand priority frame requester for fast scrolling / jumps
+  // Priority frame requester for Desktop fast scrolling
   const requestFrameLoad = useCallback(
     (frameIndex: number) => {
-      if (frameIndex < 0 || frameIndex >= activeTotalFrames) return;
+      if (frameIndex < 0 || frameIndex >= resolvedDesktopFrames) return;
       if (imagesRef.current[frameIndex]) return;
 
       const img = new Image();
-      img.src = getFrameUrl(frameIndex + 1, activeFolder);
+      img.src = getDesktopFrameUrl(frameIndex + 1, resolvedDesktopFolder);
       img.onload = () => {
         if (typeof img.decode === "function") {
           img
@@ -297,12 +455,17 @@ export default function ImageSequence({
         }
       };
     },
-    [activeFolder, activeTotalFrames, getFrameUrl, renderFrame]
+    [getDesktopFrameUrl, renderFrame, resolvedDesktopFolder, resolvedDesktopFrames]
   );
 
-  // Frame Preloading Engine (Strictly loads only the active sequence with async decode)
+  // Desktop Frame Preloading Engine (Strictly loads only when on Desktop)
   useEffect(() => {
-    imagesRef.current = new Array(activeTotalFrames).fill(null);
+    if (isMobile) {
+      setInitialReady(true);
+      return;
+    }
+
+    imagesRef.current = new Array(resolvedDesktopFrames).fill(null);
     let isCancelled = false;
     setInitialReady(false);
 
@@ -316,7 +479,7 @@ export default function ImageSequence({
 
     // Load Frame 1 immediately
     const firstImg = new Image();
-    firstImg.src = getFrameUrl(1, activeFolder);
+    firstImg.src = getDesktopFrameUrl(1, resolvedDesktopFolder);
 
     const onFirstImageReady = () => {
       if (isCancelled) return;
@@ -354,20 +517,20 @@ export default function ImageSequence({
 
     // Preload the final frame early in background to ensure 100% completion readiness
     const finalImg = new Image();
-    finalImg.src = getFrameUrl(activeTotalFrames, activeFolder);
+    finalImg.src = getDesktopFrameUrl(resolvedDesktopFrames, resolvedDesktopFolder);
     finalImg.onload = () => {
       if (isCancelled) return;
       if (typeof finalImg.decode === "function") {
         finalImg
           .decode()
           .then(() => {
-            if (!isCancelled) imagesRef.current[activeTotalFrames - 1] = finalImg;
+            if (!isCancelled) imagesRef.current[resolvedDesktopFrames - 1] = finalImg;
           })
           .catch(() => {
-            if (!isCancelled) imagesRef.current[activeTotalFrames - 1] = finalImg;
+            if (!isCancelled) imagesRef.current[resolvedDesktopFrames - 1] = finalImg;
           });
       } else {
-        imagesRef.current[activeTotalFrames - 1] = finalImg;
+        imagesRef.current[resolvedDesktopFrames - 1] = finalImg;
       }
     };
 
@@ -375,14 +538,12 @@ export default function ImageSequence({
       const priorityFrames: number[] = [];
       const remainingFrames: number[] = [];
 
-      // Immediate early frames
-      for (let i = 2; i <= Math.min(6, activeTotalFrames); i++) {
+      for (let i = 2; i <= Math.min(6, resolvedDesktopFrames); i++) {
         priorityFrames.push(i);
       }
 
-      // Keyframes distributed throughout sequence
-      for (let i = 7; i <= activeTotalFrames; i++) {
-        if (i % (isMobile ? 2 : 3) === 0) {
+      for (let i = 7; i <= resolvedDesktopFrames; i++) {
+        if (i % 3 === 0) {
           priorityFrames.push(i);
         } else {
           remainingFrames.push(i);
@@ -390,14 +551,13 @@ export default function ImageSequence({
       }
 
       const queue = [...priorityFrames, ...remainingFrames];
-      // On mobile, use 3 concurrent streams to avoid main thread & memory bus saturation; desktop uses 6
-      const concurrency = isMobile ? 3 : 6;
+      const concurrency = 6;
 
       const loadNext = (index: number) => {
         if (isCancelled || index >= queue.length) return;
         const frameNum = queue[index];
         const img = new Image();
-        img.src = getFrameUrl(frameNum, activeFolder);
+        img.src = getDesktopFrameUrl(frameNum, resolvedDesktopFolder);
 
         const handleImageReady = () => {
           if (isCancelled) return;
@@ -432,11 +592,11 @@ export default function ImageSequence({
       isCancelled = true;
       clearTimeout(safetyTimer);
     };
-  }, [activeFolder, activeTotalFrames, getFrameUrl, isMobile, renderFrame, resizeCanvas]);
+  }, [getDesktopFrameUrl, isMobile, renderFrame, resizeCanvas, resolvedDesktopFolder, resolvedDesktopFrames]);
 
-  // GSAP ScrollTrigger Pinned Cinematic Sequence
+  // Desktop GSAP ScrollTrigger Pinned Cinematic Sequence
   useEffect(() => {
-    if (!initialReady) return;
+    if (isMobile || !initialReady) return;
 
     let triggerInstance: any = null;
 
@@ -449,49 +609,36 @@ export default function ImageSequence({
         const container = containerRef.current;
         if (!container) return;
 
-        // Mobile target: ~3 viewport heights (window.innerHeight * 3). Desktop: "+=6000".
-        const scrollDistance = isMobile
-          ? () => `+=${Math.round(window.innerHeight * 3)}`
-          : "+=6000";
-
-        // Touch devices: scrub: true for instant 1:1 finger tracking without lag.
-        // Desktop mouse wheel: scrub: 0.2 for smooth interpolation.
         triggerInstance = ScrollTrigger.create({
           trigger: container,
           start: "top top",
-          end: scrollDistance,
+          end: "+=6000",
           pin: true,
           pinSpacing: true,
-          scrub: isMobile ? true : 0.2,
+          scrub: 0.2,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             const progress = self.progress;
-            setScrollProgress(progress);
 
-            // Compute frame from scroll (0 to activeTotalFrames - 1)
             const targetFrame = Math.min(
-              activeTotalFrames - 1,
-              Math.max(0, Math.round(progress * (activeTotalFrames - 1)))
+              resolvedDesktopFrames - 1,
+              Math.max(0, Math.round(progress * (resolvedDesktopFrames - 1)))
             );
 
-            // On-demand load if user scrolled past non-loaded frame
             if (!imagesRef.current[targetFrame]) {
               requestFrameLoad(targetFrame);
             }
 
-            // Hide initial scroll prompt as soon as user begins scrolling (first 2 frames)
             const shouldShowPrompt = targetFrame <= 2;
             setShowScrollPrompt((prev) => (prev !== shouldShowPrompt ? shouldShowPrompt : prev));
 
-            // Render canvas frame
             if (targetFrame !== currentFrameIndexRef.current) {
               currentFrameIndexRef.current = targetFrame;
               requestAnimationFrame(() => renderFrame(targetFrame));
             }
 
-            // SINGLE SOURCE OF TRUTH: update stage based on frame index
-            const calculatedStage = getStageFromFrame(targetFrame, activeTotalFrames);
+            const calculatedStage = getStageFromFrame(targetFrame, resolvedDesktopFrames);
             setActiveStage((prev) => (prev !== calculatedStage ? calculatedStage : prev));
           },
         });
@@ -509,35 +656,131 @@ export default function ImageSequence({
         triggerInstance.kill();
       }
     };
-  }, [activeTotalFrames, initialReady, isMobile, renderFrame, requestFrameLoad]);
+  }, [initialReady, isMobile, renderFrame, requestFrameLoad, resolvedDesktopFrames]);
 
-  // Active Stage Content Definition (Desktop)
-  const currentStage = STAGES[activeStage] || STAGES[1];
+  // Mobile Video Playback & Stage Timeline Synchronization
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const video = videoRef.current;
+    const container = containerRef.current;
+    if (!video || !container) return;
+
+    // Instant autoplay trigger
+    const attemptPlay = () => {
+      if (video.paused) {
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {});
+        }
+      }
+    };
+
+    attemptPlay();
+
+    // Map video playback progress to stages 1 -> 2 -> 3 -> 4
+    const handleTimeUpdate = () => {
+      const duration = video.duration;
+      if (!duration || isNaN(duration) || duration <= 0) return;
+      const progress = video.currentTime / duration;
+      let s = 1;
+      if (progress < 0.25) s = 1;
+      else if (progress < 0.50) s = 2;
+      else if (progress < 0.75) s = 3;
+      else s = 4;
+
+      setMobileStage((prev) => (prev !== s ? s : prev));
+    };
+
+    video.addEventListener("timeupdate", handleTimeUpdate);
+
+    // IntersectionObserver to pause when hero is scrolled out of view and resume when in view
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            attemptPlay();
+          } else {
+            video.pause();
+          }
+        });
+      },
+      {
+        root: null,
+        threshold: 0.15,
+      }
+    );
+
+    observer.observe(container);
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        video.pause();
+      } else {
+        const rect = container.getBoundingClientRect();
+        if (rect.bottom > 0 && rect.top < window.innerHeight) {
+          attemptPlay();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isMobile]);
 
   return (
     <section
       ref={containerRef}
       id="cinematic-hero"
-      className="cinematic-sequence relative w-full h-screen bg-[#070709] overflow-hidden select-none font-display"
-      style={{ minHeight: "100vh" }}
+      className="cinematic-sequence relative w-full h-screen min-h-[100svh] bg-[#070709] overflow-hidden select-none font-display"
       aria-label="Vision Stones Dolomite mineral transformation cinematic sequence"
     >
-      {/* LAYER 1: FULLSCREEN CANVAS (z-0) */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full object-cover z-0"
-        aria-label="Cinematic scroll-driven Dolomite mineral transformation"
-      />
-
-      {/* HARDWARE-ACCELERATED VIGNETTE OVERLAY (z-10, Desktop only) */}
-      {!isMobile && (
-        <div
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 20%, rgba(0, 0, 0, 0.20) 60%, rgba(0, 0, 0, 0.70) 100%)",
-          }}
-        />
+      {/* ========================================================
+          BACKGROUND LAYER: VIDEO ON MOBILE, CANVAS ON DESKTOP
+          ======================================================== */}
+      {isMobile ? (
+        <div className="absolute inset-0 w-full h-full overflow-hidden z-0 bg-[#070709]">
+          <video
+            ref={videoRef}
+            src={mobileVideoPath}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            className="absolute inset-0 w-full h-full object-cover z-0"
+            aria-label="Vision Stones Mobile Hero Video"
+          />
+          {/* Balanced soft vignette for centered text readability while keeping video vibrant */}
+          <div
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(7, 7, 9, 0.6) 0%, rgba(7, 7, 9, 0.45) 45%, rgba(7, 7, 9, 0.55) 70%, rgba(7, 7, 9, 0.9) 100%)",
+            }}
+          />
+        </div>
+      ) : (
+        <>
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full object-cover z-0"
+            aria-label="Cinematic scroll-driven Dolomite mineral transformation"
+          />
+          {/* HARDWARE-ACCELERATED VIGNETTE OVERLAY (Desktop only) */}
+          <div
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 20%, rgba(0, 0, 0, 0.20) 60%, rgba(0, 0, 0, 0.70) 100%)",
+            }}
+          />
+        </>
       )}
 
       {/* TOP BRAND INDICATOR (z-30) */}
@@ -551,95 +794,33 @@ export default function ImageSequence({
       </div>
 
       {/* ========================================================
-          MOBILE CINEMATIC 3D OVERLAY (Mobile Viewport ONLY)
-          Layers 2, 3, 4, 5 (Atmosphere, 3D Minerals, Particles, Typography)
+          STAGED TYPOGRAPHY CONTAINER (Mobile Centered & Desktop Left)
           ======================================================== */}
       {isMobile ? (
-        <MobileHeroOverlay progress={scrollProgress} />
+        <div className="hero-content absolute inset-0 z-20 pointer-events-none flex flex-col items-center justify-center px-4 xs:px-5 pt-16 pb-12 w-full">
+          <HeroStageTypography stageNumber={mobileStage} isMobile={true} />
+        </div>
       ) : (
-        /* ========================================================
-            DESKTOP STAGE CONTENT CONTAINER (Desktop Viewport ONLY)
-            100% UNCHANGED and Preserved
-            ======================================================== */
+        <div className="hero-content absolute left-4 sm:left-10 lg:left-16 bottom-6 sm:bottom-12 lg:bottom-20 w-[calc(100%-2rem)] sm:w-[85vw] md:w-[75vw] lg:w-[68vw] xl:w-[62vw] max-w-[min(960px,70vw)] z-20 pointer-events-none">
+          <HeroStageTypography stageNumber={activeStage} isMobile={false} />
+        </div>
+      )}
+
+      {/* OPENING SCROLL PROMPT (Desktop Only) */}
+      {!isMobile && (
         <div
-          className="hero-content absolute left-4 sm:left-12 lg:left-16 bottom-6 sm:bottom-14 lg:bottom-24 w-[calc(100%-2rem)] sm:max-w-xl lg:max-w-2xl xl:max-w-3xl z-20 pointer-events-none"
+          className={`absolute left-1/2 -translate-x-1/2 bottom-8 z-30 flex items-center justify-center transition-all duration-400 pointer-events-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] ${
+            showScrollPrompt ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
+          }`}
         >
-          <div
-            key={`stage-${activeStage}`}
-            className="cinematic-stage-content animate-stage-fade text-left"
-          >
-            {/* STAGE LABEL */}
-            <div className="flex items-center gap-2 sm:gap-2.5 text-[10px] xs:text-xs sm:text-xs font-display font-bold uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#E52323] mb-2 sm:mb-5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-              <span className="text-white/70">STAGE {currentStage.step}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
-              <span>{currentStage.theme}</span>
-            </div>
-
-            {/* MAIN HEADLINE */}
-            <h1 className="hero-title font-display font-black text-2xl xs:text-3xl sm:text-5xl lg:text-[72px] xl:text-[80px] text-white uppercase tracking-tighter leading-[1.02] sm:leading-[0.92] mb-2.5 sm:mb-6 drop-shadow-[0_6px_30px_rgba(0,0,0,0.95)]">
-              {currentStage.desktopTitle}
-            </h1>
-
-            {/* DESCRIPTION */}
-            <p className="hero-description text-xs xs:text-sm sm:text-base lg:text-lg text-white/90 font-display font-normal max-w-xs sm:max-w-xl leading-relaxed mb-3 sm:mb-7 drop-shadow-[0_3px_12px_rgba(0,0,0,0.9)]">
-              {currentStage.supporting}
-            </p>
-
-            {/* STAGE 4 EXCLUSIVE CTAS (ONLY ON FINISHED PRODUCT) */}
-            {currentStage.hasCta && (
-              <div className="hero-cta pointer-events-auto space-y-2.5 sm:space-y-4 pt-1">
-                {/* Trust Tag */}
-                <div className="flex flex-wrap items-center gap-2 sm:gap-5 text-[9px] xs:text-[10px] sm:text-xs font-display uppercase tracking-widest text-white/85 font-bold border-t border-white/20 pt-2.5 sm:pt-4">
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#E52323]" />
-                    <span>MANUFACTURING ROOTS SINCE 1997</span>
-                  </div>
-                  <span className="text-white/30 hidden sm:inline">•</span>
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="text-[#E52323] font-black">450+</span>
-                    <span>CLIENTS</span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 pt-0.5">
-                  <Link
-                    href="#products"
-                    className="inline-flex items-center gap-1.5 text-[11px] sm:text-sm font-display font-bold uppercase tracking-widest text-white hover:text-[#E52323] transition-colors py-1.5 cursor-pointer group"
-                  >
-                    <span className="border-b-2 border-white group-hover:border-[#E52323] pb-0.5 transition-colors">
-                      VIEW PRODUCTS →
-                    </span>
-                  </Link>
-
-                  <Link
-                    href="/contact"
-                    className="inline-flex items-center gap-1.5 bg-[#E52323] text-white hover:bg-[#C91A1A] text-[11px] sm:text-sm font-display font-bold uppercase tracking-wider px-3.5 sm:px-5 py-2 sm:py-2.5 transition-all shadow-lg hover:shadow-[#E52323]/25"
-                  >
-                    <span>REQUEST A QUOTE</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </div>
-              </div>
-            )}
+          <div className="w-7 h-11 rounded-full border-2 border-white/85 flex items-start justify-center p-1.5 shadow-[0_0_20px_rgba(255,255,255,0.35)] animate-pulse">
+            <div className="w-1.5 h-2.5 bg-white rounded-full animate-bounce shadow-[0_0_8px_rgba(255,255,255,0.9)]" />
           </div>
         </div>
       )}
 
-      {/* OPENING SCROLL PROMPT (Minimalist Mouse Icon Only, center on mobile, bottom on desktop) */}
-      <div
-        className={`absolute left-1/2 -translate-x-1/2 top-[44%] -translate-y-1/2 md:top-auto md:bottom-8 md:translate-y-0 z-30 flex items-center justify-center transition-all duration-400 pointer-events-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] ${
-          showScrollPrompt ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
-        }`}
-      >
-        {/* Mild White Blinking Mouse Icon Only (No background) */}
-        <div className="w-6 h-10 sm:w-7 sm:h-11 rounded-full border-2 border-white/85 flex items-start justify-center p-1.5 shadow-[0_0_20px_rgba(255,255,255,0.35)] animate-pulse">
-          <div className="w-1.5 h-2.5 bg-white rounded-full animate-bounce shadow-[0_0_8px_rgba(255,255,255,0.9)]" />
-        </div>
-      </div>
-
-      {/* Loading Overlay */}
-      {!initialReady && (
+      {/* Desktop Loading Overlay */}
+      {!initialReady && !isMobile && (
         <div className="absolute inset-0 z-50 bg-[#070709] flex flex-col items-center justify-center space-y-3 px-6 font-display">
           <div className="w-10 h-10 bg-[#111111] border border-white/20 flex items-center justify-center relative overflow-hidden">
             <span className="font-display font-extrabold text-sm text-white tracking-widest">VS</span>
