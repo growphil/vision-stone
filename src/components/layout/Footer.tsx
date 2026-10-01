@@ -201,11 +201,30 @@ export default function Footer() {
         </div>
 
         {/* BOTTOM COPYRIGHT BAR */}
-        <div className="mt-16 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400">
-          <p>
+        <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-5 text-xs text-neutral-400">
+          <p className="text-center md:text-left order-3 md:order-1">
             &copy; {new Date().getFullYear()} VISION STONES. All rights reserved. Tirunelveli, Tamil Nadu, India.
           </p>
-          <div className="flex items-center gap-6">
+
+          {/* GROWPHIL Attribution */}
+          <a
+            href="https://growphil.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 group text-neutral-400 hover:text-white transition-all order-1 md:order-2"
+            title="GROWPHIL - Web Design & Development"
+          >
+            <span className="text-[11px] font-medium tracking-wide">Designed &amp; Developed by</span>
+            <span className="inline-flex items-center justify-center bg-white px-2.5 py-1 rounded-[4px] shadow-sm group-hover:shadow-md group-hover:brightness-105 transition-all">
+              <img
+                src="/GP-LOGO-F-2-2.webp"
+                alt="GROWPHIL"
+                className="h-4.5 w-auto max-h-[18px] object-contain"
+              />
+            </span>
+          </a>
+
+          <div className="flex items-center gap-6 order-2 md:order-3">
             <Link href="/privacy" className="hover:text-white transition-colors">
               Privacy Policy
             </Link>
