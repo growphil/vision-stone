@@ -41,7 +41,7 @@ export default function ContactFormClient() {
     }
   }, [initialProduct]);
 
-  const handleSubmit = (e: React.FormEvent, submitIntent: "quote" | "sample") => {
+  const handleSubmit = async (e: React.FormEvent, submitIntent: "quote" | "sample") => {
     e.preventDefault();
     setError("");
 
@@ -53,10 +53,45 @@ export default function ContactFormClient() {
     setLoading(true);
     setIntent(submitIntent);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          company: formData.company,
+          email: formData.email,
+          phone: formData.phone,
+          product: formData.product,
+          quantity: formData.quantity,
+          meshSpecification: formData.meshSpecification,
+          application: formData.application,
+          packaging: formData.packaging,
+          deliveryLocation: formData.deliveryLocation,
+          deliveryDate: formData.deliveryDate,
+          orderType: formData.orderType,
+          additionalNotes: formData.additionalNotes,
+          intent: submitIntent,
+          source: "Website Contact Page",
+          hp: "",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setSubmitted(true);
+      } else {
+        setError(
+          data.error || "Failed to submit enquiry. Please check your details or contact us directly on WhatsApp."
+        );
+      }
+    } catch (err: any) {
+      console.error("Submission error:", err);
+      setError("Network error while submitting enquiry. Please check your connection or contact us directly on WhatsApp.");
+    } finally {
       setLoading(false);
-      setSubmitted(true);
-    }, 600);
+    }
   };
 
   if (submitted) {
