@@ -8,7 +8,7 @@ import { COMPANY_INFO } from "@/data/company";
 export const metadata: Metadata = {
   title: "Contact & Request a Quote | Mineral Supply - VISION STONES",
   description:
-    "Request quotations and trial samples for Dolomite, Limestone, Lime, and Calcite directly from Vision Stones in Tirunelveli, Tamil Nadu. Phone: 8300685057, Email: visionstones.22@gmail.com.",
+    "Request quotations and trial samples for Dolomite, Limestone, Lime, and Calcite directly from Vision Stones in Tirunelveli, Tamil Nadu. Phone: 8300685057, Email: sales@visionstones.in.",
   openGraph: {
     title: "Contact & Request a Quote | VISION STONES",
     description: "Every mineral requirement can be different. Request a quote or sample today.",

@@ -55,7 +55,7 @@ export const COMPANY_INFO: CompanyInfo = {
   contact: {
     phone: "8300685057",
     phoneDisplay: "+91 83006 85057",
-    email: "visionstones.22@gmail.com",
+    email: "sales@visionstones.in",
     website: "visionstones.in",
   },
   mission:

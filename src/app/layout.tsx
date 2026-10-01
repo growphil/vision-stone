@@ -111,7 +111,7 @@ export default function RootLayout({
     contactPoint: {
       "@type": "ContactPoint",
       telephone: "+91-83006-85057",
-      email: "visionstones.22@gmail.com",
+      email: "sales@visionstones.in",
       contactType: "sales",
       availableLanguage: ["English", "Tamil", "Hindi"],
     },
